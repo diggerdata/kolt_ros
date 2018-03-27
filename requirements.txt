@@ -1,0 +1,13 @@
+numpy
+scipy
+scikit-learn
+keras
+opencv-python
+h5py
+imgaug
+
+# TensorFlow can be installed either as CPU or GPU versions.
+# You select which one to install by (un)commenting these lines.
+
+tensorflow		# CPU Version of TensorFlow.
+# tensorflow-gpu	# GPU version of TensorFlow.

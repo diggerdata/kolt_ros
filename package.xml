@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>yolov2_ros</name>
+  <version>1.0.0</version>
+  <description></description>
+  <maintainer email="narosenberg@wpi.edu">Nathan Rosenberg</maintainer>
+  <license>BSD</license>
+  <url type="website">https://github.com/diggerdata/yolov2_ros</url>
+  <author email="narosenberg@wpi.edu">Nathan Rosenberg</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>image_transport</depend>
+  <depend>cv_bridge</depend>
+  <depend>sensor_msgs</depend>
+  <depend>message_generation</depend>
+  <depend>actionlib</depend>
+
+  <!-- Test dependencies -->
+  <test_depend>rostest</test_depend>
+</package>
