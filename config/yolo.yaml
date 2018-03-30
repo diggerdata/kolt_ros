@@ -1,0 +1,36 @@
+yolo_model:
+
+  model:
+    backend: full_yolo
+    input_size: 416
+    anchors: [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828]
+    max_box_per_image: 10
+    labels: ['trafficcone']
+  
+  train:
+    train_image_folder: "../datsets/cone_dataset/img/"
+    train_annot_folder: "../datasets/cone_datset/ann/"
+
+    train_times: 8
+    pretrained_weights: ""
+    batch_size: 16
+    learning_rate: 0.0004  # The standard Adom learning rate of 1e-4
+    nb_epochs: 50
+    warmup_epochs: 3
+
+    object_scale: 5.0
+    no_object_scale: 1.0
+    coord_scale: 1.0
+    class_scale: 1.0
+
+    saved_weights_name: "../weights/full_yolo.h5"
+
+    debug: false
+
+  valid:
+    valid_image_folder: ""
+    valid_annot_folder: ""
+
+    valid_times: 1
+
+
