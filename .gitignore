@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# H5 files
+*.h5
+
 # Distribution / packaging
 .Python
 env/

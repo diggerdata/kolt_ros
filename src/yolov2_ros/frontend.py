@@ -15,6 +15,9 @@ from keras.utils import multi_gpu_model
 from backend import TinyYoloFeature, FullYoloFeature, MobileNetFeature, SqueezeNetFeature, Inception3Feature, VGG16Feature, ResNet50Feature
 
 class ModelMGPU(Model):
+    """
+    This class is a hack to get the ModelCheckpoint callback to work with Keras's multi_gpu_model.
+    """
     def __init__(self, ser_model, gpus):
         pmodel = multi_gpu_model(ser_model, gpus)
         self.__dict__.update(pmodel.__dict__)
@@ -56,19 +59,19 @@ class YOLO(object):
         input_image     = Input(shape=(self.input_size, self.input_size, 3))
         self.true_boxes = Input(shape=(1, 1, 1, max_box_per_image , 4))  
 
-        if backend == 'Inception3':
+        if backend == 'inception3':
             self.feature_extractor = Inception3Feature(self.input_size)  
-        elif backend == 'SqueezeNet':
+        elif backend == 'squeeze_net':
             self.feature_extractor = SqueezeNetFeature(self.input_size)        
-        elif backend == 'MobileNet':
+        elif backend == 'mobile_net':
             self.feature_extractor = MobileNetFeature(self.input_size)
-        elif backend == 'Full Yolo':
+        elif backend == 'full_yolo':
             self.feature_extractor = FullYoloFeature(self.input_size)
-        elif backend == 'Tiny Yolo':
+        elif backend == 'tiny_yolo':
             self.feature_extractor = TinyYoloFeature(self.input_size)
-        elif backend == 'VGG16':
+        elif backend == 'vgg16':
             self.feature_extractor = VGG16Feature(self.input_size)
-        elif backend == 'ResNet50':
+        elif backend == 'res_net_50':
             self.feature_extractor = ResNet50Feature(self.input_size)
         else:
             raise Exception('Architecture not supported! Only support Full Yolo, Tiny Yolo, MobileNet, SqueezeNet, VGG16, ResNet50, and Inception3 at the moment!')

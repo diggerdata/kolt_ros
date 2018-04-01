@@ -17,6 +17,7 @@ class BoundBox:
 
         self.label = -1
         self.score = -1
+        self.xy_score = -1
 
     def get_label(self):
         if self.label == -1:
@@ -24,11 +25,30 @@ class BoundBox:
         
         return self.label
     
+    def get_all_labels(self):
+        return self.classes
+    
     def get_score(self):
         if self.score == -1:
             self.score = self.classes[self.get_label()]
             
         return self.score
+
+    def get_xy_score(self):
+        if self.xy_score == -1:
+            self.xy_score = self.c[self.get_label()]
+
+        return self.xy_score
+
+    def get_xy_center(self):
+        x = ((self.xmax - self.xmin)/2) + self.xmin
+        y = ((self.ymax - self.ymin)/2) + self.ymin
+        return x, y
+    
+    def get_xy_extents(self):
+        x = self.xmax - self.xmin
+        y = self.ymax - self.ymin
+        return x, y
 
 class WeightReader:
     def __init__(self, weight_file):
