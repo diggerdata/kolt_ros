@@ -1,3 +1,4 @@
+import os
 from keras.models import Model
 import tensorflow as tf
 from keras.layers import Reshape, Activation, Conv2D, Input, MaxPooling2D, BatchNormalization, Flatten, Dense, Lambda
@@ -7,8 +8,8 @@ from keras.applications.mobilenet import MobileNet
 from keras.applications import InceptionV3
 from keras.applications.vgg16 import VGG16
 from keras.applications.resnet50 import ResNet50
+import rospkg, rospy
 
-FULL_YOLO_BACKEND_PATH  = "../../weights/full_yolo_backend.h5"   # should be hosted on a server
 TINY_YOLO_BACKEND_PATH  = "../../weights/tiny_yolo_backend.h5"   # should be hosted on a server
 SQUEEZENET_BACKEND_PATH = "../../weights/squeezenet_backend.h5"  # should be hosted on a server
 MOBILENET_BACKEND_PATH  = "../../weights/mobilenet_backend.h5"   # should be hosted on a server
@@ -35,7 +36,7 @@ class BaseFeatureExtractor(object):
 
 class FullYoloFeature(BaseFeatureExtractor):
     """docstring for ClassName"""
-    def __init__(self, input_size):
+    def __init__(self, input_size, backend_path):
         input_image = Input(shape=(input_size, input_size, 3))
 
         # the function to implement the orgnization layer (thanks to github.com/allanzelener/YAD2K)
@@ -164,7 +165,7 @@ class FullYoloFeature(BaseFeatureExtractor):
         x = LeakyReLU(alpha=0.1)(x)
 
         self.feature_extractor = Model(input_image, x)  
-        self.feature_extractor.load_weights(FULL_YOLO_BACKEND_PATH)
+        self.feature_extractor.load_weights(backend_path + "/full_yolo_backend.h5")
 
     def normalize(self, image):
         return image / 255.

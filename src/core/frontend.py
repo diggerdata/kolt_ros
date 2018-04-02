@@ -5,14 +5,16 @@ import tensorflow as tf
 import numpy as np
 import os
 import cv2
-from utils import decode_netout, compute_overlap, compute_ap
+from .utils import decode_netout, compute_overlap, compute_ap
 from keras.applications.mobilenet import MobileNet
 from keras.layers.merge import concatenate
 from keras.optimizers import SGD, Adam, RMSprop
-from preprocessing import BatchGenerator
+from .preprocessing import BatchGenerator
 from keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
-from keras.utils import multi_gpu_model
-from backend import TinyYoloFeature, FullYoloFeature, MobileNetFeature, SqueezeNetFeature, Inception3Feature, VGG16Feature, ResNet50Feature
+from keras.utils import multi_gpu_model, print_summary
+from .backend import TinyYoloFeature, FullYoloFeature, MobileNetFeature, SqueezeNetFeature, Inception3Feature, VGG16Feature, ResNet50Feature
+from tensorflow.python.client import device_lib
+import rospy
 
 class ModelMGPU(Model):
     """
@@ -35,6 +37,7 @@ class ModelMGPU(Model):
 
 class YOLO(object):
     def __init__(self, backend,
+                       backend_path,
                        input_size, 
                        labels, 
                        max_box_per_image,
@@ -42,12 +45,14 @@ class YOLO(object):
                        ngpu=2):
 
         self.input_size = input_size
+        self.backend_path = backend_path
         
         self.labels   = list(labels)
         self.nb_class = len(self.labels)
         self.nb_box   = len(anchors)//2
         self.class_wt = np.ones(self.nb_class, dtype='float32')
         self.anchors  = anchors
+        self.graph = None
 
         self.max_box_per_image = max_box_per_image
 
@@ -66,7 +71,7 @@ class YOLO(object):
         elif backend == 'mobile_net':
             self.feature_extractor = MobileNetFeature(self.input_size)
         elif backend == 'full_yolo':
-            self.feature_extractor = FullYoloFeature(self.input_size)
+            self.feature_extractor = FullYoloFeature(self.input_size, self.backend_path)
         elif backend == 'tiny_yolo':
             self.feature_extractor = TinyYoloFeature(self.input_size)
         elif backend == 'vgg16':
@@ -76,7 +81,7 @@ class YOLO(object):
         else:
             raise Exception('Architecture not supported! Only support Full Yolo, Tiny Yolo, MobileNet, SqueezeNet, VGG16, ResNet50, and Inception3 at the moment!')
 
-        print(self.feature_extractor.get_output_shape())    
+        rospy.logdebug(self.feature_extractor.get_output_shape())    
         self.grid_h, self.grid_w = self.feature_extractor.get_output_shape()        
         features = self.feature_extractor.extract(input_image)            
 
@@ -102,14 +107,18 @@ class YOLO(object):
         layer.set_weights([new_kernel, new_bias])
 
         # print a summary of the whole model
-        self.model.summary()
+        # self.model.summary(print_fn=rospy.logdebug)
 
         if ngpu<=1:
-            print('Creating model on 1 GPU...')
+            rospy.loginfo('Using 1 GPU: {}'.format(self.get_available_gpus()))
             self.mgpu_model = self.model
         else:
-            print('Creating model on {} GPUs...'.format(ngpu))
+            rospy.loginfo('Using {} GPUs: {}'.format(ngpu, self.get_available_gpus()))
             self.mgpu_model = ModelMGPU(self.model, ngpu)
+
+    def get_available_gpus(self):
+        local_device_protos = device_lib.list_local_devices()
+        return [x.name for x in local_device_protos if x.device_type == 'GPU']
 
     def custom_loss(self, y_true, y_pred):
         mask_shape = tf.shape(y_true)[:4]
@@ -493,7 +502,7 @@ class YOLO(object):
         input_image = np.expand_dims(input_image, 0)
         dummy_array = np.zeros((1,1,1,1,self.max_box_per_image,4))
 
-        netout = self.model.predict([input_image, dummy_array])[0]
+        netout = self.mgpu_model.predict([input_image, dummy_array])[0]
         boxes  = decode_netout(netout, self.anchors, self.nb_class)
 
         for i in range(len(boxes)):

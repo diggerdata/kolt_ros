@@ -14,10 +14,12 @@
   <depend>image_transport</depend>
   <depend>cv_bridge</depend>
   <depend>sensor_msgs</depend>
-  <depend>message_generation</depend>
   <depend>actionlib</depend>
   <depend>vision_msgs</depend>
 
   <!-- Test dependencies -->
   <test_depend>rostest</test_depend>
+
+  <build_depend>message_generation</build_depend>
+  <exec_depend>message_runtime</exec_depend>
 </package>
