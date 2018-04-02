@@ -42,7 +42,7 @@ class YOLO(object):
                        labels, 
                        max_box_per_image,
                        anchors,
-                       ngpu=2):
+                       n_gpu=2):
 
         self.input_size = input_size
         self.backend_path = backend_path
@@ -109,12 +109,14 @@ class YOLO(object):
         # print a summary of the whole model
         # self.model.summary(print_fn=rospy.logdebug)
 
-        if ngpu<=1:
+        if n_gpu<=1:
             rospy.loginfo('Using 1 GPU: {}'.format(self.get_available_gpus()))
             self.mgpu_model = self.model
+            self.mgpu_model._make_predict_function()
         else:
-            rospy.loginfo('Using {} GPUs: {}'.format(ngpu, self.get_available_gpus()))
-            self.mgpu_model = ModelMGPU(self.model, ngpu)
+            rospy.loginfo('Using {} GPUs: {}'.format(n_gpu, self.get_available_gpus()))
+            self.mgpu_model = ModelMGPU(self.model, n_gpu)
+            self.mgpu_model._make_predict_function()
 
     def get_available_gpus(self):
         local_device_protos = device_lib.list_local_devices()
@@ -502,8 +504,9 @@ class YOLO(object):
         input_image = np.expand_dims(input_image, 0)
         dummy_array = np.zeros((1,1,1,1,self.max_box_per_image,4))
 
-        netout = self.mgpu_model.predict([input_image, dummy_array])[0]
+        netout = self.model.predict([input_image, dummy_array])[0]
         boxes  = decode_netout(netout, self.anchors, self.nb_class)
+        print('Found {} boxes'.format(len(boxes)))
 
         for i in range(len(boxes)):
             boxes[i].xmin = int(boxes[i].xmin*image_w)

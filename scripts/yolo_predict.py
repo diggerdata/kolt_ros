@@ -55,7 +55,8 @@ class Yolov2Ros(object):
         try:
             yolo_detect = rospy.ServiceProxy('yolo_detect', YoloDetect)
             detected = yolo_detect(YoloDetectRequest(data))
-            print(detected)
+            # rospy.loginfo('Found {} bounding boxes'.format(len(detected.detection.detections)))
+            self.detect_pub.publish(detected.detection)
         except rospy.ServiceException as e:
             rospy.logerr(e)
 

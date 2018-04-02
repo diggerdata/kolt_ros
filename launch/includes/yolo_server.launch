@@ -1,5 +1,6 @@
 <launch>
     <node pkg="yolov2_ros" name="yolo_server" type="yolo_server.py" output="screen">
+        <param name="n_gpu" type="int" value="1" />
         <param name="backend" type="str" value="full_yolo" />
         <param name="input_size" type="int" value="416" />
         <rosparam param="labels">["trafficcone"]</rosparam>
