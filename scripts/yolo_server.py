@@ -33,6 +33,7 @@ class YoloServer(object):
                                                   2.06253, 3.33843, 5.47434, 7.88282, 
                                                   3.52778, 9.77052, 9.16828])
         self.weights_path = rospy.get_param('~weights_path', default='../weights/full_yolo.h5')   # Path to the weights.h5 file
+        self.weight_file = rospy.get_param('~weight_file')
 
         self.yolo = YOLO(
             n_gpu=self.n_gpu,
@@ -43,6 +44,8 @@ class YoloServer(object):
             max_box_per_image = self.max_number_detections,
             anchors = self.anchors
         )
+
+        self.yolo.load_weights(self.weights_path + '/' + self.weight_file)
 
         s = rospy.Service('yolo_detect', YoloDetect, self._handle_yolo_detect)
         

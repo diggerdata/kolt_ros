@@ -110,17 +110,13 @@ class YOLO(object):
         # self.model.summary(print_fn=rospy.logdebug)
 
         if n_gpu<=1:
-            rospy.loginfo('Using 1 GPU: {}'.format(self.get_available_gpus()))
+            rospy.loginfo('Using 1 GPU...')
             self.mgpu_model = self.model
             self.mgpu_model._make_predict_function()
         else:
-            rospy.loginfo('Using {} GPUs: {}'.format(n_gpu, self.get_available_gpus()))
+            rospy.loginfo('Using {} GPUs...'.format(n_gpu))
             self.mgpu_model = ModelMGPU(self.model, n_gpu)
             self.mgpu_model._make_predict_function()
-
-    def get_available_gpus(self):
-        local_device_protos = device_lib.list_local_devices()
-        return [x.name for x in local_device_protos if x.device_type == 'GPU']
 
     def custom_loss(self, y_true, y_pred):
         mask_shape = tf.shape(y_true)[:4]
