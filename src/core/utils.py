@@ -18,6 +18,9 @@ class BoundBox:
         self.label = -1
         self.score = -1
         self.xy_score = -1
+    
+    def __repr__(self):
+        return repr((self.score))
 
     def get_label(self):
         if self.label == -1:
@@ -87,7 +90,7 @@ def draw_boxes(image, boxes, labels):
         
     return image        
         
-def decode_netout(netout, anchors, nb_class, obj_threshold=0.3, nms_threshold=0.3):
+def decode_netout(netout, anchors, nb_class, max_box_per_image, obj_threshold=0.3, nms_threshold=0.3):
     grid_h, grid_w, nb_box = netout.shape[:3]
 
     boxes = []
@@ -136,7 +139,7 @@ def decode_netout(netout, anchors, nb_class, obj_threshold=0.3, nms_threshold=0.
     # remove the boxes which are less likely than a obj_threshold
     boxes = [box for box in boxes if box.get_score() > obj_threshold]
     
-    return boxes    
+    return sorted(boxes, key=lambda box: box.score, reverse=True)[:max_box_per_image]
 
 def compute_overlap(a, b):
     """

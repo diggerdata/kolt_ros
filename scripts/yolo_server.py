@@ -14,9 +14,9 @@ from geometry_msgs.msg import PoseWithCovariance, Pose2D
 from std_msgs.msg import Header
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
-import tensorflow as tf
-import keras.models
 
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
 class YoloServer(object):
@@ -47,9 +47,9 @@ class YoloServer(object):
 
         self.yolo.load_weights(self.weights_path + '/' + self.weight_file)
 
-        s = rospy.Service('yolo_detect', YoloDetect, self._handle_yolo_detect)
-        
-        rospy.spin()
+        s = rospy.Service('yolo_detect', YoloDetect, self._handle_yolo_detect, buff_size=10000000)
+
+        s.spin()
 
     def _handle_yolo_detect(self, req):
         cv_image = None

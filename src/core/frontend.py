@@ -500,9 +500,9 @@ class YOLO(object):
         input_image = np.expand_dims(input_image, 0)
         dummy_array = np.zeros((1,1,1,1,self.max_box_per_image,4))
 
-        netout = self.model.predict([input_image, dummy_array])[0]
-        boxes  = decode_netout(netout, self.anchors, self.nb_class)
-        print('Found {} boxes'.format(len(boxes)))
+        with tf.device('/gpu:0'):
+            netout = self.model.predict([input_image, dummy_array])[0]
+        boxes  = decode_netout(netout, self.anchors, self.nb_class, self.max_box_per_image)
 
         for i in range(len(boxes)):
             boxes[i].xmin = int(boxes[i].xmin*image_w)
