@@ -1,0 +1,26 @@
+<annotation>
+	<folder>img</folder>
+	<filename>191.jpg</filename>
+	<path>/home/diggerdata/datasets/cone_dataset/img/191.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>478</width>
+		<height>359</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>trafficcone</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>261</xmin>
+			<ymin>204</ymin>
+			<xmax>310</xmax>
+			<ymax>328</ymax>
+		</bndbox>
+	</object>
+</annotation>

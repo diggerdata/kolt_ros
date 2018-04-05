@@ -1,0 +1,26 @@
+<annotation>
+	<folder>train_img</folder>
+	<filename>522.jpg</filename>
+	<path>/home/diggerdata/datasets/cone_dataset/train_img/522.jpg</path>
+	<source>
+		<database>Unknown</database>
+	</source>
+	<size>
+		<width>800</width>
+		<height>600</height>
+		<depth>3</depth>
+	</size>
+	<segmented>0</segmented>
+	<object>
+		<name>trafficcone</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>256</xmin>
+			<ymin>323</ymin>
+			<xmax>371</xmax>
+			<ymax>493</ymax>
+		</bndbox>
+	</object>
+</annotation>

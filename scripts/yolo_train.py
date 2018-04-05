@@ -32,8 +32,6 @@ class YoloTrain(object):
         # Weight paths
         self.train_annot_folder = rospy.get_param('~train_annot_folder')
         self.train_image_folder = rospy.get_param('~train_image_folder')
-        self.valid_annot_folder = rospy.get_param('~valid_annot_folder')
-        self.valid_image_folder = rospy.get_param('~valid_image_folder')
         self.saved_weights_name = rospy.get_param('~saved_weights_name')
 
         # Train configuration
@@ -57,6 +55,8 @@ class YoloTrain(object):
 
         # parse annotations of the validation set, if any, otherwise split the training set
         if 'valid_annot_folder' in rospy.get_param_names():
+            self.valid_annot_folder = rospy.get_param('~valid_annot_folder')
+            self.valid_image_folder = rospy.get_param('~valid_image_folder')
             self.valid_imgs, self.valid_labels = parse_annotation(
                 self.valid_annot_folder, 
                 self.valid_image_folder, 

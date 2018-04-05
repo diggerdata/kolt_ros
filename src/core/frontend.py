@@ -65,15 +65,15 @@ class YOLO(object):
         self.true_boxes = Input(shape=(1, 1, 1, max_box_per_image , 4))  
 
         if backend == 'inception3':
-            self.feature_extractor = Inception3Feature(self.input_size)  
+            self.feature_extractor = Inception3Feature(self.input_size, self.backend_path)  
         elif backend == 'squeeze_net':
-            self.feature_extractor = SqueezeNetFeature(self.input_size)        
+            self.feature_extractor = SqueezeNetFeature(self.input_size, self.backend_path)        
         elif backend == 'mobile_net':
-            self.feature_extractor = MobileNetFeature(self.input_size)
+            self.feature_extractor = MobileNetFeature(self.input_size, self.backend_path)
         elif backend == 'full_yolo':
             self.feature_extractor = FullYoloFeature(self.input_size, self.backend_path)
         elif backend == 'tiny_yolo':
-            self.feature_extractor = TinyYoloFeature(self.input_size)
+            self.feature_extractor = TinyYoloFeature(self.input_size, self.backend_path)
         elif backend == 'vgg16':
             self.feature_extractor = VGG16Feature(self.input_size)
         elif backend == 'res_net_50':

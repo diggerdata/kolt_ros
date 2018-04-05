@@ -7,9 +7,9 @@
     <!-- <arg name="train_image_path" value="$(find yolov2_ros)/datasets/cone_dataset/img_valid/" /> -->
     <!-- <arg name="train_annot_path" value="$(find yolov2_ros)/datasets/cone_dataset/ann_valid/" /> -->
 
-    <node pkg="yolov2_ros" name="yolo_predict" type="yolo_predict.py" output="screen">
+    <node pkg="yolov2_ros" name="yolo_train" type="yolo_train.py" output="screen">
         <param name="n_gpu" type="int" value="1" />
-        <param name="backend" type="str" value="full_yolo" />
+        <param name="backend" type="str" value="tiny_yolo" />
         <param name="input_size" type="int" value="416" />
         <param name="max_number_detections" type="int" value="1" />
         <rosparam param="anchors">[0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828]</rosparam>
@@ -27,7 +27,7 @@
         <param name="train_times" type="int" value="8" />
         <param name="valid_times" type="int" value="1" />
         <param name="nb_epochs" type="int" value="50" />
-        <param name="learning_rate" type="double" value="00004" />
+        <param name="learning_rate" type="double" value="4e-4" />
         <param name="batch_size" type="int" value="16" />
         <param name="warmup_epochs" type="int" value="3" />
         <param name="object_scale" type="double" value="5.0" />
