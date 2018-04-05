@@ -1,6 +1,6 @@
 # yolov2_ros
 
-[![Build Status](https://travis-ci.org/diggerdata/yolov2_ros.svg?branch=master)](https://travis-ci.org/diggerdata/yolov2_ros)[![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)![ros Kinetic](https://img.shields.io/badge/ROS-Kinetic-red.svg)
+[![Build Status](https://travis-ci.org/diggerdata/yolov2_ros.svg?branch=master)](https://travis-ci.org/diggerdata/yolov2_ros) [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) ![ros Kinetic](https://img.shields.io/badge/ROS-Kinetic-red.svg)
 
 This package is a ROS implementation of the YOLOv2 algorithm using Keras and TensorFlow.
 
