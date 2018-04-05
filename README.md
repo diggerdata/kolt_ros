@@ -13,7 +13,7 @@ The source code is released under a [BSD 3-Clause license](ros_package_template/
 **Maintainer:** Nathan Rosenberg, narosenberg@wpi.edu
 **Affiliation:** [Robotics Engineering, Worcester Polytechnic Institute](https://www.wpi.edu/academics/departments/robotics-engineering)
 
-The PACKAGE NAME package has been tested under [ROS] Kinetic and Ubuntu 16.04. This is research code, expect that it changes often and any fitness for a particular purpose is disclaimed.
+The yolov2_ros package has been tested under [ROS] Kinetic and Ubuntu 16.04. This is research code, expect that it changes often and any fitness for a particular purpose is disclaimed.
 
 [![Build Status](https://travis-ci.org/diggerdata/yolov2_ros.svg?branch=master)](https://travis-ci.org/diggerdata/yolov2_ros)
 
