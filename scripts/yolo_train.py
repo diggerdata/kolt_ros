@@ -29,12 +29,14 @@ class YoloTrain(object):
         self.weights_path = rospy.get_param('~weights_path', default='../weights/full_yolo.h5')  # Path to the weights.h5 file
         self.weight_file = rospy.get_param('~weight_file')
 
+        # Weight paths
         self.train_annot_folder = rospy.get_param('~train_annot_folder')
         self.train_image_folder = rospy.get_param('~train_image_folder')
         self.valid_annot_folder = rospy.get_param('~valid_annot_folder')
         self.valid_image_folder = rospy.get_param('~valid_image_folder')
         self.saved_weights_name = rospy.get_param('~saved_weights_name')
 
+        # Train configuration
         self.labels = rospy.get_param('~labels')  # Eg: ['trafficcone', 'person', 'dog']
         self.train_times = rospy.get_param('~train_times', default=8)
         self.valid_times = rospy.get_param('~valid_times', default=1)
@@ -54,22 +56,22 @@ class YoloTrain(object):
             self.labels)
 
         # parse annotations of the validation set, if any, otherwise split the training set
-        if 'valid_annot_folder' in rospy.get_param_names()):
+        if 'valid_annot_folder' in rospy.get_param_names():
             self.valid_imgs, self.valid_labels = parse_annotation(
                 self.valid_annot_folder, 
                 self.valid_image_folder, 
                 self.labels)
         else:
-            train_valid_split = int(0.8*len(train_imgs))
-            np.random.shuffle(train_imgs)
+            train_valid_split = int(0.8*len(self.train_imgs))
+            np.random.shuffle(self.train_imgs)
 
-            self.valid_imgs = train_imgs[train_valid_split:]
-            self.train_imgs = train_imgs[:train_valid_split]
+            self.valid_imgs = self.train_imgs[train_valid_split:]
+            self.train_imgs = self.train_imgs[:train_valid_split]
 
         if len(self.labels) > 0:
-            overlap_labels = set(self.labels).intersection(set(train_labels.keys()))
+            overlap_labels = set(self.labels).intersection(set(self.train_labels.keys()))
 
-            rospy.loginfo('Seen labels: {}'.format(train_labels))
+            rospy.loginfo('Seen labels: {}'.format(self.train_labels))
             rospy.loginfo('Given labels: {}'.format(self.labels))
             rospy.loginfo('Overlap labels: {}'.format(overlap_labels))
 
@@ -78,7 +80,7 @@ class YoloTrain(object):
                 rospy.signal_shutdown()
         else:
             rospy.loginfo('No labels are provided. Training on all seen labels.')
-            self.labels = train_labels.keys()
+            self.labels = self.train_labels.keys()
         
         self.yolo = YOLO(
             n_gpu=self.n_gpu,
@@ -95,7 +97,7 @@ class YoloTrain(object):
             valid_imgs = self.valid_imgs,
             train_times =self.train_times,
             valid_times = self.valid_times,
-            nb_epochs = self.nb_epochs], 
+            nb_epochs = self.nb_epochs, 
             learning_rate = self.learning_rate, 
             batch_size = self.batch_size,
             warmup_epochs = self.warmup_epochs,
@@ -107,7 +109,7 @@ class YoloTrain(object):
             debug = False)
 
 if __name__ == '__main__':
-    rospy.init_node('yolov2_ros_tain')
+    rospy.init_node('yolov2_ros_train')
 
     try:
         yt = YoloTrain()
