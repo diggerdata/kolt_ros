@@ -31,10 +31,55 @@ class YoloTrain(object):
 
         self.train_annot_folder = rospy.get_param('~train_annot_folder')
         self.train_image_folder = rospy.get_param('~train_image_folder')
+        self.valid_annot_folder = rospy.get_param('~valid_annot_folder')
+        self.valid_image_folder = rospy.get_param('~valid_image_folder')
+        self.saved_weights_name = rospy.get_param('~saved_weights_name')
+
         self.labels = rospy.get_param('~labels')  # Eg: ['trafficcone', 'person', 'dog']
         self.train_times = rospy.get_param('~train_times', default=8)
-        self.valid_times = rospy.get_param('~valid_times', default=)
+        self.valid_times = rospy.get_param('~valid_times', default=1)
+        self.nb_epochs = rospy.get_param('~nb_epochs', default=50)
+        self.learning_rate = rospy.get_param('~learning_rate', default=0.0004)
+        self.batch_size = rospy.get_param('~batch_size', default=16)
+        self.warmup_epochs = rospy.get_param('~warmup_epochs', default=3)
+        self.object_scale = rospy.get_param('~object_scale', default=5.0)
+        self.no_object_scale = rospy.get_param('~no_object_scale', default=1.0)
+        self.coord_scale = rospy.get_param('~coord_scale', default=1.0)
+        self.class_scale = rospy.get_param('~class_scale', default=1.0)
 
+        # parse annotations of the training set
+        self.train_imgs, self.train_labels = parse_annotation(
+            self.train_annot_folder, 
+            self.train_image_folder, 
+            self.labels)
+
+        # parse annotations of the validation set, if any, otherwise split the training set
+        if 'valid_annot_folder' in rospy.get_param_names()):
+            self.valid_imgs, self.valid_labels = parse_annotation(
+                self.valid_annot_folder, 
+                self.valid_image_folder, 
+                self.labels)
+        else:
+            train_valid_split = int(0.8*len(train_imgs))
+            np.random.shuffle(train_imgs)
+
+            self.valid_imgs = train_imgs[train_valid_split:]
+            self.train_imgs = train_imgs[:train_valid_split]
+
+        if len(self.labels) > 0:
+            overlap_labels = set(self.labels).intersection(set(train_labels.keys()))
+
+            rospy.loginfo('Seen labels: {}'.format(train_labels))
+            rospy.loginfo('Given labels: {}'.format(self.labels))
+            rospy.loginfo('Overlap labels: {}'.format(overlap_labels))
+
+            if len(overlap_labels) < len(self.labels):
+                rospy.loginfo('Some labels have no annotations! Please revise the list of labels in the launch file!')
+                rospy.signal_shutdown()
+        else:
+            rospy.loginfo('No labels are provided. Training on all seen labels.')
+            self.labels = train_labels.keys()
+        
         self.yolo = YOLO(
             n_gpu=self.n_gpu,
             backend = self.backend,
@@ -46,19 +91,19 @@ class YoloTrain(object):
         )
 
         self.yolo.train(
-            train_imgs = train_imgs,
-            valid_imgs = valid_imgs,
-            train_times = config['train']['train_times'],
-            valid_times = config['valid']['valid_times'],
-            nb_epochs = config['train']['nb_epochs'], 
-            learning_rate = config['train']['learning_rate'], 
-            batch_size = config['train']['batch_size'],
-            warmup_epochs = config['train']['warmup_epochs'],
-            object_scale = config['train']['object_scale'],
-            no_object_scale = config['train']['no_object_scale'],
-            coord_scale = config['train']['coord_scale'],
-            class_scale = config['train']['class_scale'],
-            saved_weights_name = config['train']['saved_weights_name'],
+            train_imgs = self.train_imgs,
+            valid_imgs = self.valid_imgs,
+            train_times =self.train_times,
+            valid_times = self.valid_times,
+            nb_epochs = self.nb_epochs], 
+            learning_rate = self.learning_rate, 
+            batch_size = self.batch_size,
+            warmup_epochs = self.warmup_epochs,
+            object_scale = self.object_scale,
+            no_object_scale = self.no_object_scale,
+            coord_scale = self.coord_scale,
+            class_scale = self.class_scale,
+            saved_weights_name = self.saved_weights_name,
             debug = False)
 
 if __name__ == '__main__':
