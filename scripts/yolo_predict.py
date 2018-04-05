@@ -64,7 +64,7 @@ class Yolov2Ros(object):
                 rospy.logerr(e)
             # rospy.loginfo('Found {} bounding boxes'.format(len(detected.detection.detections)))
 
-            image = self.draw_boxes(cv_image, detected)
+            image = self._draw_boxes(cv_image, detected)
 
             self.bounding_box_pub.publish(self.bridge.cv2_to_imgmsg(image, "bgr8"))
             # self.detect_pub.publish(detected)
@@ -77,7 +77,7 @@ class Yolov2Ros(object):
         except CvBridgeError as e:
             rospy.logerr(e)
 
-    def draw_boxes(self, image, detected):
+    def _draw_boxes(self, image, detected):
         for detect in detected.detections:
             box = detect.bbox
             xmin = int(box.center.x - (box.size_x/2))
