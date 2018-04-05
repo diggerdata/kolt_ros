@@ -99,6 +99,7 @@ before_script:
   - wstool init
   - if [[ -f $ROSINSTALL_FILE ]] ; then wstool merge $ROSINSTALL_FILE ; fi
   - wstool up
+  - git clone git@github.com:Kukanani/vision_msgs.git
   # package depdencies: install using rosdep.
   - cd ~/catkin_ws
   - rosdep install -y --from-paths src --ignore-src --rosdistro $ROS_DISTRO
