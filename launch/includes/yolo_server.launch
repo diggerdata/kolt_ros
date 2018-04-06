@@ -1,12 +1,12 @@
 <launch>
     <node pkg="yolov2_ros" name="yolo_server" type="yolo_server.py" output="screen">
         <param name="n_gpu" type="int" value="1" />
-        <param name="backend" type="str" value="full_yolo" />
+        <param name="backend" type="str" value="tiny_yolo" />
         <param name="input_size" type="int" value="416" />
         <rosparam param="labels">["trafficcone"]</rosparam>
         <param name="max_number_detections" type="int" value="1" />
         <rosparam param="anchors">[0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828]</rosparam>
         <param name="weights_path" type="str" value="$(find yolov2_ros)/weights" />
-        <param name="weight_file" type="str" value="best_full_yolo.h5" />
+        <param name="weight_file" type="str" value="best_tiny_yolo_1.h5" />
     </node>
 </launch>

@@ -47,6 +47,8 @@ class YoloServer(object):
 
         self.yolo.load_weights(self.weights_path + '/' + self.weight_file)
 
+        rospy.loginfo('YOLO detector ready...')
+
         s = rospy.Service('yolo_detect', YoloDetect, self._handle_yolo_detect, buff_size=10000000)
 
         s.spin()
@@ -55,13 +57,16 @@ class YoloServer(object):
         cv_image = None
         detection_array = Detection2DArray()
         detections = []
+        boxes = None
         
         try:
             cv_image = self.bridge.imgmsg_to_cv2(req.image, "bgr8")
         except CvBridgeError as e:
             rospy.logerr(e)
-        
-        boxes = self.yolo.predict(cv_image)
+        try:
+            boxes = self.yolo.predict(cv_image)
+        except SystemError:
+            pass
         # rospy.loginfo('Found {} boxes'.format(len(boxes)))
         for box in boxes:
             detection = Detection2D()

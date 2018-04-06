@@ -20,60 +20,73 @@ from vision_msgs.msg import Detection2DArray, ObjectHypothesis, VisionInfo
 from std_msgs.msg import Header
 from sensor_msgs.msg import Image
 from yolov2_ros.srv import *
+from yolov2_ros.msg import *
 
 class Yolov2Ros(object):
     def __init__(self):
-        self.image_msg = Image()
         self.bridge = CvBridge()
 
         self.rgb_image_topic = rospy.get_param('~image_topic', default='/camera/rgb/image_raw')  # RGB image topic
         self.image_type = rospy.get_param('~image_type', default='rgb')  # Either 'rgb' or 'rgbd'
         self.get_object_pos = rospy.get_param('~get_object_pos', default=False)  # Either True or False
 
-        rospy.loginfo('Using RBG image topic {}'.format(self.rgb_image_topic))
+        rospy.loginfo('Using RGB image topic {}'.format(self.rgb_image_topic))
         rospy.loginfo('Setting image type to {}'.format(self.image_type))
         rospy.loginfo('Setting get object position to {}'.format(self.get_object_pos))
-        
-        # Make sure we are not useing a RGB camera and trying to get object position
-        if self.get_object_pos and self.image_type == 'rgb':
-            ros.logerr('Can not get object position with RGB data! Please use a RGBD camera instead.')
 
         self.rgb_image_sub = rospy.Subscriber(self.rgb_image_topic, Image, self._image_cb)
         self.detect_pub = rospy.Publisher('{}/detected'.format(rospy.get_name()), Detection2DArray, queue_size=1)
         self.bounding_box_pub = rospy.Publisher('{}/bounding_box_image'.format(rospy.get_name()), Image, queue_size=1)
 
-        if self.image_type == 'rgbd':
+        if self.get_object_pos:
             self.depth_image_topic = rospy.get_param(self.depth_image_topic, default='/camera/depth_registered/image_raw')
+            self.horiz_fov = rospy.get_param('horiz_fov')
+
             rospy.loginfo('Using depth image topic {}'.format(self.depth_image_topic))
+            rospy.loginfo('Camera horizontal FOV is {}'.format(self.horiz_fov))
 
             self.depth_image_sub = rospy.Subscriber(self.depth_topic, Image, self._depth_cb)
-            self.obj_location_pub = rospy.Publisher('yolo/object_location', ObjectLocation, queue_size=1)
+            self.obj_location_pub = rospy.Publisher('{}/object_location'.format(rospy.get_name()), ObjectLocation, queue_size=1)
 
-        rospy.spin()
+        # rate = rospy.Rate(30)
+        self.rgb_image = Image()
+        self.depth_image = Image()
+        
+        last_image = Image()
+        while not rospy.is_shutdown():
+            cur_img = self.rgb_image
+            if cur_img.header.stamp != last_image.header.stamp:
+                rospy.wait_for_service('yolo_detect')
+                try:
+                    yolo_detect = rospy.ServiceProxy('yolo_detect', YoloDetect, persistent=True)
+                    detected = yolo_detect(YoloDetectRequest(cur_img)).detection
+                    
+                    try:
+                        cv_image = self.bridge.imgmsg_to_cv2(cur_img, "bgr8")
+                        cv_depth_image = self.bridge.imgmsg_to_cv2(data, "16UC1")
+                    except CvBridgeError as e:
+                        rospy.logerr(e)
+                    
+                    if len(detected.detections) > 0:
+                        # rospy.loginfo('Found {} bounding boxes'.format(len(detected.detection.detections)))
+                        self.detect_pub.publish(detected)
+                        
+                        if self.get_object_pos:
+                            
+                    
+                    image = self._draw_boxes(cv_image, detected)
+                    self.bounding_box_pub.publish(self.bridge.cv2_to_imgmsg(image, "bgr8"))
+                except rospy.ServiceException as e:
+                    rospy.logerr(e)
+            
+            last_image = cur_img
+            # rate.sleep()
     
     def _image_cb(self, data):
-        rospy.wait_for_service('yolo_detect')
-        try:
-            yolo_detect = rospy.ServiceProxy('yolo_detect', YoloDetect, persistent=True)
-            detected = yolo_detect(YoloDetectRequest(data)).detection
-            try:
-                cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
-            except CvBridgeError as e:
-                rospy.logerr(e)
-            # rospy.loginfo('Found {} bounding boxes'.format(len(detected.detection.detections)))
-
-            image = self._draw_boxes(cv_image, detected)
-
-            self.bounding_box_pub.publish(self.bridge.cv2_to_imgmsg(image, "bgr8"))
-            self.detect_pub.publish(detected)
-        except rospy.ServiceException as e:
-            rospy.logerr(e)
+        self.rgb_image = data
 
     def _depth_cb(self, data):
-        try:
-            cv_depth_image = self.bridge.imgmsg_to_cv2(data, "16UC1")
-        except CvBridgeError as e:
-            rospy.logerr(e)
+        self.depth_image = data
 
     def _draw_boxes(self, image, detected):
         for detect in detected.detections:
@@ -90,11 +103,11 @@ class Yolov2Ros(object):
                         cv2.FONT_HERSHEY_SIMPLEX, 
                         1e-3 * image.shape[0], 
                         (0,255,0), 2)
-            
+
         return image
     
     # TODO: Implement
-    def calculate_distance(self, results, depth_map):
+    def calculate_distance(self, depth_map, detected):
         # Only publish if you see an object and the closest
         # Loop through all the bounding boxes and find min
         object_depth = sys.maxsize
@@ -111,10 +124,6 @@ class Yolov2Ros(object):
             h = location[3]
             x_center = location[4]
             y_center = location[5]
-
-            # sanity check
-            if(x_center > 640 or y_center > 480):
-                break
 
             center_pixel_depth = image_depth[y_center, x_center]
             distance_avg = self.depth_region(
@@ -152,9 +161,16 @@ class Yolov2Ros(object):
             # rospy.loginfo(self.pub_img_pos)
             self.pub_img_pos.publish(object_topic)
 
-    def depth_region(self, depth_map, y_center, x_center, w, h):
+    def depth_region(self, depth_map, detection):
         # grab depths along a strip and take average
         # go half way
+        box = detection.bbox
+
+        y_center = box.center.y
+        x_center = box.center.x
+        w = box.size_x
+        h = box.size_y
+
         starting_width = w/4
         end_width = w - starting_width
         x_center = x_center - starting_width
@@ -167,7 +183,7 @@ class Yolov2Ros(object):
             pixie_avg += pixel_depth
             x_center += 1
 
-        pixie_avg = (pixie_avg/(end_width - starting_width)) * 0.001
+        pixie_avg = (pixie_avg/(end_width - starting_width))
         return float(pixie_avg)
 
     # TODO: Implement
@@ -201,22 +217,6 @@ class Yolov2Ros(object):
         measurements = [bearing, object_range]
 
         return measurements
-
-    # TODO: Implement
-    def get_object_2dlocation(self, index, results):
-        x = int(results[index][1])
-        y = int(results[index][2])
-        w = int(results[index][3])//2
-        h = int(results[index][4])//2
-
-        x1 = x - w
-        y1 = y - h
-        x2 = x + w
-        y2 = y + h
-        x_center = (x1 + x2) // 2
-        y_center = (y1 + y2) // 2
-
-        return [x, y, w, h, x_center, y_center]
 
 if __name__ == '__main__':
     rospy.init_node('yolov2_ros')
