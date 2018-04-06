@@ -7,7 +7,7 @@
             <param name="image_height" value="480" />
             <param name="pixel_format" value="yuyv" />
             <param name="io_method" value="mmap"/>
-            <param name="framerate" value="5" />
+            <param name="framerate" value="30" />
         </node>
         <node pkg="yolov2_ros" name="yolo_predict" type="yolo_predict.py" output="screen">
             <param name="camera_id" type="str" value="0" />

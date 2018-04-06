@@ -27,8 +27,8 @@ class Yolov2Ros(object):
         self.bridge = CvBridge()
 
         self.rgb_image_topic = rospy.get_param('~image_topic', default='/camera/rgb/image_raw')  # RGB image topic
-        self.image_type = rospy.get_param('~image_type', default='rgb')                          # Either 'rgb' or 'rgbd'
-        self.get_object_pos = rospy.get_param('~get_object_pos', default=False)                  # Either True or False
+        self.image_type = rospy.get_param('~image_type', default='rgb')  # Either 'rgb' or 'rgbd'
+        self.get_object_pos = rospy.get_param('~get_object_pos', default=False)  # Either True or False
 
         rospy.loginfo('Using RBG image topic {}'.format(self.rgb_image_topic))
         rospy.loginfo('Setting image type to {}'.format(self.image_type))
@@ -49,8 +49,6 @@ class Yolov2Ros(object):
             self.depth_image_sub = rospy.Subscriber(self.depth_topic, Image, self._depth_cb)
             self.obj_location_pub = rospy.Publisher('yolo/object_location', ObjectLocation, queue_size=1)
 
-        self.rgb_image = None  # The latest RGB image 
-
         rospy.spin()
     
     def _image_cb(self, data):
@@ -67,7 +65,7 @@ class Yolov2Ros(object):
             image = self._draw_boxes(cv_image, detected)
 
             self.bounding_box_pub.publish(self.bridge.cv2_to_imgmsg(image, "bgr8"))
-            # self.detect_pub.publish(detected)
+            self.detect_pub.publish(detected)
         except rospy.ServiceException as e:
             rospy.logerr(e)
 
@@ -96,7 +94,7 @@ class Yolov2Ros(object):
         return image
     
     # TODO: Implement
-    def calculate_distance(self, results, image_depth):
+    def calculate_distance(self, results, depth_map):
         # Only publish if you see an object and the closest
         # Loop through all the bounding boxes and find min
         object_depth = sys.maxsize
@@ -105,38 +103,35 @@ class Yolov2Ros(object):
         for i in range(len(results)):
             # check for objects pre-defined in mocap
             current_feat = results[i][0]
-            if(current_feat == 'car' or
-                    current_feat == 'tvmonitor' or
-                    current_feat == 'dog'):
-                detected = True
-                location = self.get_object_2dlocation(i, results)
-                #x = location[0]
-                #y = location[1]
-                w = location[2]
-                h = location[3]
-                x_center = location[4]
-                y_center = location[5]
+            detected = True
+            location = self.get_object_2dlocation(i, results)
+            #x = location[0]
+            #y = location[1]
+            w = location[2]
+            h = location[3]
+            x_center = location[4]
+            y_center = location[5]
 
-                # sanity check
-                if(x_center > 640 or y_center > 480):
-                    break
+            # sanity check
+            if(x_center > 640 or y_center > 480):
+                break
 
-                center_pixel_depth = image_depth[y_center, x_center]
-                distance_avg = self.depth_region(
-                    image_depth, y_center, x_center, w, h)
-                # convert to mm
-                distance = float(center_pixel_depth) * 0.001
-                # print("Distance of object {} from target : \
-                #      {}".format(i, distance))
+            center_pixel_depth = image_depth[y_center, x_center]
+            distance_avg = self.depth_region(
+                image_depth, y_center, x_center, w, h)
+            # convert to mm
+            distance = float(center_pixel_depth) * 0.001
+            # print("Distance of object {} from target : \
+            #      {}".format(i, distance))
 
-                # print("Averaged distance of object {} : "
-                #      .format(distance_avg))
+            # print("Averaged distance of object {} : "
+            #      .format(distance_avg))
 
-                # self.draw_bounding_box(results, i)
-                if distance < object_depth:
-                    object_depth = distance_avg
-                    #bounding_box = [x, y, w, h]
-                    object_name = results[i][0]
+            # self.draw_bounding_box(results, i)
+            if distance < object_depth:
+                object_depth = distance_avg
+                #bounding_box = [x, y, w, h]
+                object_name = results[i][0]
 
         if(detected):
             # Publish the distance and bounding box
@@ -157,7 +152,6 @@ class Yolov2Ros(object):
             # rospy.loginfo(self.pub_img_pos)
             self.pub_img_pos.publish(object_topic)
 
-    # TODO: Implement
     def depth_region(self, depth_map, y_center, x_center, w, h):
         # grab depths along a strip and take average
         # go half way

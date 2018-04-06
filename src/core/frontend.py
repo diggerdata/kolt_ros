@@ -42,7 +42,7 @@ class YOLO(object):
                        labels, 
                        max_box_per_image,
                        anchors,
-                       n_gpu=2):
+                       n_gpu=1):
 
         self.input_size = input_size
         self.backend_path = backend_path

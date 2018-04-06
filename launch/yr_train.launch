@@ -8,26 +8,26 @@
     <!-- <arg name="train_annot_path" value="$(find yolov2_ros)/datasets/cone_dataset/ann_valid/" /> -->
 
     <node pkg="yolov2_ros" name="yolo_train" type="yolo_train.py" output="screen">
-        <param name="n_gpu" type="int" value="1" />
-        <param name="backend" type="str" value="tiny_yolo" />
+        <param name="n_gpu" type="int" value="2" />
+        <param name="backend" type="str" value="full_yolo" />
         <param name="input_size" type="int" value="416" />
-        <param name="max_number_detections" type="int" value="1" />
+        <param name="max_number_detections" type="int" value="10" />
         <rosparam param="anchors">[0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828]</rosparam>
         
         <param name="weights_path" type="str" value="$(find yolov2_ros)/weights" />
-        <param name="weight_file" type="str" value="full_yolo_cone_6.h5" />
+        <param name="weight_file" type="str" value="" />
         
         <param name="train_annot_folder" type="str" value="$(arg train_annot_path)" />
         <param name="train_image_folder" type="str" value="$(arg train_image_path)" />
         <!-- <param name="valid_annot_folder" type="str" value="$(arg valid_annot_path)" /> -->
         <!-- <param name="valid_image_folder" type="str" value="$(arg valid_image_path)" /> -->
-        <param name="saved_weights_name" type="str" value="best_yolo" />
+        <param name="saved_weights_name" type="str" value="$(find yolov2_ros)/weights/best_full_yolo.h5" />
 
         <rosparam param="labels">["trafficcone"]</rosparam>
         <param name="train_times" type="int" value="8" />
         <param name="valid_times" type="int" value="1" />
         <param name="nb_epochs" type="int" value="50" />
-        <param name="learning_rate" type="double" value="4e-4" />
+        <param name="learning_rate" type="double" value="1e-4" />
         <param name="batch_size" type="int" value="16" />
         <param name="warmup_epochs" type="int" value="3" />
         <param name="object_scale" type="double" value="5.0" />

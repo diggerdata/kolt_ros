@@ -10,7 +10,7 @@ import rospy
 from core import YOLO, parse_annotation
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"]="0"
+os.environ["CUDA_VISIBLE_DEVICES"]="0,1"
 
 class YoloTrain(object):
     def __init__(self):
@@ -76,8 +76,7 @@ class YoloTrain(object):
             rospy.loginfo('Overlap labels: {}'.format(overlap_labels))
 
             if len(overlap_labels) < len(self.labels):
-                rospy.loginfo('Some labels have no annotations! Please revise the list of labels in the launch file!')
-                rospy.signal_shutdown()
+                rospy.signal_shutdown('Some labels have no annotations! Please revise the list of labels in the launch file!')
         else:
             rospy.loginfo('No labels are provided. Training on all seen labels.')
             self.labels = self.train_labels.keys()
@@ -107,6 +106,8 @@ class YoloTrain(object):
             class_scale = self.class_scale,
             saved_weights_name = self.saved_weights_name,
             debug = False)
+        
+        rospy.signal_shutdown('Completed training.')
 
 if __name__ == '__main__':
     rospy.init_node('yolov2_ros_train')
