@@ -63,7 +63,7 @@ class Yolov2Ros(object):
                     
                     try:
                         cv_image = self.bridge.imgmsg_to_cv2(cur_img, "bgr8")
-                        cv_depth_image = self.bridge.imgmsg_to_cv2(data, "16UC1")
+                        # cv_depth_image = self.bridge.imgmsg_to_cv2(cur_img, "16UC1")
                     except CvBridgeError as e:
                         rospy.logerr(e)
                     
@@ -72,7 +72,7 @@ class Yolov2Ros(object):
                         self.detect_pub.publish(detected)
                         
                         if self.get_object_pos:
-                            
+                            continue
                     
                     image = self._draw_boxes(cv_image, detected)
                     self.bounding_box_pub.publish(self.bridge.cv2_to_imgmsg(image, "bgr8"))
