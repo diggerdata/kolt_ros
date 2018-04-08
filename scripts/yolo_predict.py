@@ -20,7 +20,6 @@ from vision_msgs.msg import Detection2DArray, ObjectHypothesis, VisionInfo
 from std_msgs.msg import Header
 from sensor_msgs.msg import Image
 from yolov2_ros.srv import *
-from yolov2_ros.msg import *
 
 class Yolov2Ros(object):
     def __init__(self):
@@ -28,7 +27,6 @@ class Yolov2Ros(object):
 
         self.rgb_image_topic = rospy.get_param('~image_topic', default='/camera/rgb/image_raw')  # RGB image topic
         self.image_type = rospy.get_param('~image_type', default='rgb')  # Either 'rgb' or 'rgbd'
-        self.get_object_pos = rospy.get_param('~get_object_pos', default=False)  # Either True or False
 
         rospy.loginfo('Using RGB image topic {}'.format(self.rgb_image_topic))
         rospy.loginfo('Setting image type to {}'.format(self.image_type))
@@ -38,15 +36,11 @@ class Yolov2Ros(object):
         self.detect_pub = rospy.Publisher('{}/detected'.format(rospy.get_name()), Detection2DArray, queue_size=1)
         self.bounding_box_pub = rospy.Publisher('{}/bounding_box_image'.format(rospy.get_name()), Image, queue_size=1)
 
-        if self.get_object_pos:
+        if self.image_type = 'rgbd':
             self.depth_image_topic = rospy.get_param(self.depth_image_topic, default='/camera/depth_registered/image_raw')
-            self.horiz_fov = rospy.get_param('horiz_fov')
-
             rospy.loginfo('Using depth image topic {}'.format(self.depth_image_topic))
-            rospy.loginfo('Camera horizontal FOV is {}'.format(self.horiz_fov))
 
             self.depth_image_sub = rospy.Subscriber(self.depth_topic, Image, self._depth_cb)
-            self.obj_location_pub = rospy.Publisher('{}/object_location'.format(rospy.get_name()), ObjectLocation, queue_size=1)
 
         # rate = rospy.Rate(30)
         self.rgb_image = Image()
@@ -55,6 +49,7 @@ class Yolov2Ros(object):
         last_image = Image()
         while not rospy.is_shutdown():
             cur_img = self.rgb_image
+            cur_depth = self.depth_image
             if cur_img.header.stamp != last_image.header.stamp:
                 rospy.wait_for_service('yolo_detect')
                 try:
@@ -69,10 +64,11 @@ class Yolov2Ros(object):
                     
                     if len(detected.detections) > 0:
                         # rospy.loginfo('Found {} bounding boxes'.format(len(detected.detection.detections)))
+                        if self.image_type == 'rgbd':
+                            detected.detections.source_img = cur_depth
+                        else:
+                            detected.detections.source_img = cur_img
                         self.detect_pub.publish(detected)
-                        
-                        if self.get_object_pos:
-                            continue
                     
                     image = self._draw_boxes(cv_image, detected)
                     self.bounding_box_pub.publish(self.bridge.cv2_to_imgmsg(image, "bgr8"))
