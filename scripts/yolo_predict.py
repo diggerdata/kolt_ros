@@ -30,13 +30,12 @@ class Yolov2Ros(object):
 
         rospy.loginfo('Using RGB image topic {}'.format(self.rgb_image_topic))
         rospy.loginfo('Setting image type to {}'.format(self.image_type))
-        rospy.loginfo('Setting get object position to {}'.format(self.get_object_pos))
 
         self.rgb_image_sub = rospy.Subscriber(self.rgb_image_topic, Image, self._image_cb)
         self.detect_pub = rospy.Publisher('{}/detected'.format(rospy.get_name()), Detection2DArray, queue_size=1)
         self.bounding_box_pub = rospy.Publisher('{}/bounding_box_image'.format(rospy.get_name()), Image, queue_size=1)
 
-        if self.image_type = 'rgbd':
+        if self.image_type == 'rgbd':
             self.depth_image_topic = rospy.get_param(self.depth_image_topic, default='/camera/depth_registered/image_raw')
             rospy.loginfo('Using depth image topic {}'.format(self.depth_image_topic))
 
@@ -65,9 +64,11 @@ class Yolov2Ros(object):
                     if len(detected.detections) > 0:
                         # rospy.loginfo('Found {} bounding boxes'.format(len(detected.detection.detections)))
                         if self.image_type == 'rgbd':
-                            detected.detections.source_img = cur_depth
+                            for i in range(0,len(detected.detections)):
+                                detected.detections[i].source_img = cur_depth
                         else:
-                            detected.detections.source_img = cur_img
+                            for i in range(0,len(detected.detections)):
+                                detected.detections[i].source_img = cur_img
                         self.detect_pub.publish(detected)
                     
                     image = self._draw_boxes(cv_image, detected)
