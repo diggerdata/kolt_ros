@@ -36,8 +36,8 @@ class Yolov2Ros(object):
         self.bounding_box_pub = rospy.Publisher('{}/bounding_box_image'.format(rospy.get_name()), Image, queue_size=1)
 
         if self.image_type == 'rgbd':
-            self.depth_image_topic = rospy.get_param(self.depth_image_topic, default='/camera/depth_registered/image_raw')
-            rospy.loginfo('Using depth image topic {}'.format(self.depth_image_topic))
+            self.depth_topic = rospy.get_param('~depth_image_topic', default='/camera/depth_registered/image_raw')
+            rospy.loginfo('Using depth image topic {}'.format(self.depth_topic))
 
             self.depth_image_sub = rospy.Subscriber(self.depth_topic, Image, self._depth_cb)
 
