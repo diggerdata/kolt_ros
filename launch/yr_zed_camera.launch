@@ -12,10 +12,18 @@
     <node pkg="yolov2_ros" name="yolo_predict" type="yolo_predict.py" output="screen">
         <param name="camera_id" type="str" value="0" />
         <param name="image_topic" type="str" value="/zed/rgb/image_raw_color" />
-        <param name="image_type" type="bool" value="rgbd" />
+        <param name="depth_image_topic" type="str" value="/zed/depth/depth_registered" />
+        <param name="image_type" type="str" value="rgbd" />
         
     </node>
     
     <include file="$(find yolov2_ros)/launch/includes/yolo_server.launch" />
     
+
+    <node pkg="wpirm_navigation" name="cone_vision_pose" type="cone_vision_pose.py" output="screen">
+        <param name="camera_frame" type="str" value="zed_left_camera" />
+        <param name="detection_topic" type="str" value="/yolo_predict/detected" />
+        <param name="odom_topic" type="str" value="/zed/odom" />
+        <param name="horiz_fov" type="double" value="96.0" />
+    </node>
 </launch>
