@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>yolov2_ros</name>
+  <name>kolt</name>
   <version>1.0.0</version>
   <description>A ROS implementation of YOLOv2 using Karas and TensorFlow.</description>
   <maintainer email="narosenberg@wpi.edu">Nathan Rosenberg</maintainer>

@@ -378,7 +378,7 @@ class YOLO(object):
         # print evaluation
         for label, average_precision in average_precisions.items():
             print(self.labels[label], '{:.4f}'.format(average_precision))
-        print('mAP: {:.4f}'.format(sum(average_precisions.values()) / len(average_precisions)))         
+        rospy.loginfo('mAP: {:.4f}'.format(sum(average_precisions.values()) / len(average_precisions)))         
 
     def evaluate(self, 
                  generator, 

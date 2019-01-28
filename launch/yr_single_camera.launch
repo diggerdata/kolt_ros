@@ -2,14 +2,14 @@
      
      <group>
         <node name="usb_cam1" pkg="usb_cam" type="usb_cam_node" output="screen" >
-            <param name="video_device" value="/dev/video0" />
+            <param name="video_device" value="/dev/video1" />
             <param name="image_width" value="640" />
             <param name="image_height" value="480" />
             <param name="pixel_format" value="yuyv" />
             <param name="io_method" value="mmap"/>
             <param name="framerate" value="30" />
         </node>
-        <node pkg="yolov2_ros" name="yolo_predict" type="yolo_predict.py" output="screen">
+        <node pkg="kolt" name="yolo_predict" type="yolo_predict.py" output="screen">
             <param name="camera_id" type="str" value="0" />
             <param name="image_topic" type="str" value="/usb_cam1/image_raw" />
             <param name="image_type" type="str" value="rgb" />
@@ -17,6 +17,6 @@
         </node>
     </group>
     
-    <include file="$(find yolov2_ros)/launch/includes/yolo_server.launch" />
+    <include file="$(find kolt)/launch/includes/yolo_server.launch" />
     
 </launch>

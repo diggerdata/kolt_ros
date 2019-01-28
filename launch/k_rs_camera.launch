@@ -1,0 +1,26 @@
+<launch>
+    
+    <arg name="odometry_frame" default="map" />
+
+    <group ns="rs">
+        <include file="$(find realsense2_camera)/launch/rs_aligned_depth.launch" />
+    </group>
+     
+    <node pkg="kolt" name="yolo_predict" type="yolo_predict.py" output="screen">
+        <param name="camera_id" type="str" value="0" />
+        <param name="image_topic" type="str" value="/rs/camera/color/image_raw" />
+        <param name="depth_image_topic" type="str" value="/rs/camera/aligned_depth_to_color/image_raw" />
+        <param name="image_type" type="str" value="rgbd" />
+        
+    </node>
+    
+    <include file="$(find kolt)/launch/includes/yolo_server.launch" />
+    
+    <node pkg="kolt" name="vision_pose" type="vision_pose.py" output="screen">
+        <param name="camera_frame" type="str" value="camera_depth_frame" />
+        <param name="detection_topic" type="str" value="/yolo_predict/detected" />
+        <param name="odom_topic" type="str" value="/zed/odom" />
+        <param name="horiz_fov" type="double" value="85.2" />
+        <param name="vert_fov" type="double" value="58.0" />
+    </node>
+</launch>

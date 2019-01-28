@@ -13,7 +13,7 @@ from copy import deepcopy
 import numpy as np
 import cv2
 
-# ROS: includes
+# ROS includes
 import rospy
 from cv_bridge import CvBridge, CvBridgeError
 from vision_msgs.msg import Detection2DArray, ObjectHypothesis, VisionInfo
