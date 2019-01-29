@@ -21,6 +21,7 @@ from nav_msgs.msg import Odometry
 
 class VisionPose(object):
     def __init__(self):
+        self.camera_type = rospy.get_param('~camera_type', default='zed')
         self.camera_frame = rospy.get_param('~camera_frame')
         self.detection_topic = rospy.get_param('~detection_topic', default='yolo_predict/detection')
         self.odom_topic = rospy.get_param('~odom_topic', default='odom')
@@ -77,9 +78,19 @@ class VisionPose(object):
             x_center = int(detect.bbox.center.x)
             y_center = int(detect.bbox.center.y)
             try:
-                cv_depth_image = self.bridge.imgmsg_to_cv2(depth_image, "16UC1")
+                cv_depth_image = None
+                center_pixel_depth = None
+                if self.camera_type == 'zed':
+                    cv_depth_image = self.bridge.imgmsg_to_cv2(depth_image, "32FC1")
+                    center_pixel_depth = cv_depth_image[y_center, x_center]
+                elif self.camera_type == 'realsense':
+                    cv_depth_image = self.bridge.imgmsg_to_cv2(depth_image, "16UC1")
+                    center_pixel_depth = cv_depth_image[y_center, x_center]/1000
+                else:
+                    cv_depth_image = self.bridge.imgmsg_to_cv2(depth_image, "16UC1")
+                    center_pixel_depth = cv_depth_image[y_center, x_center]/1000
+                    
                 img_height, img_width = cv_depth_image.shape
-                center_pixel_depth = cv_depth_image[y_center, x_center]/1000
                 # distance = self.depth_region(cv_depth_image, detect)
                 distance = float(center_pixel_depth)
                 if isinf(distance) or isnan(distance):

@@ -19,7 +19,7 @@ from cv_bridge import CvBridge, CvBridgeError
 from vision_msgs.msg import Detection2DArray, ObjectHypothesis, VisionInfo
 from std_msgs.msg import Header
 from sensor_msgs.msg import Image
-from yolov2_ros.srv import *
+from kolt.srv import *
 
 class Yolov2Ros(object):
     def __init__(self):

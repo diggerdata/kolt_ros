@@ -5,7 +5,7 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-from yolov2_ros.srv import *
+from kolt.srv import *
 import rospy
 from copy import deepcopy
 from core import YOLO

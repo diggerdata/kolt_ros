@@ -8,7 +8,7 @@
     <arg name="valid_annot_path" value="/home/diggerdata/catkin_ws/src/Kolt/datasets/cone_dataset/val_ann/" />
 
     <node pkg="kolt" name="yolo_train" type="yolo_train.py" output="screen">
-        <param name="n_gpu" type="int" value="1" />
+        <param name="n_gpu" type="int" value="2" />
         <param name="backend" type="str" value="full_yolo" />
         <param name="input_size" type="int" value="416" />
         <param name="max_number_detections" type="int" value="10" />
