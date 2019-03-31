@@ -1,22 +1,23 @@
 #!/usr/bin/env python
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-import numpy as np
-from copy import deepcopy
-import rospy
+from copy import deepcopy, copy
+from math import cos, isinf, isnan, pi, radians, sin
+
 import actionlib
+import numpy as np
+import rospy
 import tf
-from math import pi, sin, cos, radians, isinf, isnan
 from cv_bridge import CvBridge, CvBridgeError
-from vision_msgs.msg import Detection2DArray
-from std_msgs.msg import Header
-from sensor_msgs.msg import NavSatFix
-from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped, Pose
-from tf.transformations import euler_from_quaternion, quaternion_from_euler
+from geometry_msgs.msg import (Pose, PoseArray, PoseStamped,
+                               PoseWithCovarianceStamped)
 from nav_msgs.msg import Odometry
+from std_msgs.msg import Header
+from tf.transformations import euler_from_quaternion, quaternion_from_euler
+from vision_msgs.msg import Detection2DArray
+
+from core import Tracker
 
 
 class VisionPose(object):
@@ -25,6 +26,7 @@ class VisionPose(object):
         self.camera_frame = rospy.get_param('~camera_frame')
         self.detection_topic = rospy.get_param('~detection_topic', default='yolo_predict/detection')
         self.odom_topic = rospy.get_param('~odom_topic', default='odom')
+        self.pose_topic = rospy.get_param('~pose_topic', default='vision_poses')
         self.horiz_fov = rospy.get_param('~horiz_fov', default=85.2)
         self.vert_fov = rospy.get_param('~vert_fov', default=58.0)
 
@@ -33,19 +35,28 @@ class VisionPose(object):
         self.last_detection = Detection2DArray()
         self.last_odom = Odometry()
         self.bridge = CvBridge()
+        self.tf_listener = tf.TransformListener()
         
+        self.rate = 10
+        self.tracker = Tracker(1, 100, 10, 255, self.rate)
+
         self.detection_sub = rospy.Subscriber(self.detection_topic, Detection2DArray, self._detection_cb)
         self.odom_sub = rospy.Subscriber(self.odom_topic, Odometry, self._odom_cb)
+        
+        self.pose_pub = rospy.Publisher(self.pose_topic, PoseArray)
 
-        rate = rospy.Rate(10)
+        rate = rospy.Rate(self.rate)
         last_detection = Detection2DArray()
         while not rospy.is_shutdown():
             cur_detection = self.last_detection
             if cur_detection.header.stamp != last_detection.header.stamp:
-                x, y, z = self.get_cone_pose(cur_detection)
-                rospy.loginfo('x: {} y: {} z: {}'.format(x,y,z))
-                if x and y and z != None:
-                    self._handle_transform(self.camera_frame, x, y, z)
+                vision_poses = self.get_vision_pose(cur_detection)
+                if vision_poses is not None:
+                    tracked_poses = self.tracker.update(vision_poses)
+                    self._handle_pose_broadcast(tracked_poses, self.camera_frame)
+                    # rospy.loginfo(len(self.tracker.update(vision_poses)))
+                # if x and y and z != None:
+                    # self._handle_transform(self.camera_frame, x, y, z)
             last_detection = cur_detection
             rate.sleep()
 
@@ -64,13 +75,35 @@ class VisionPose(object):
                     rospy.Time.now(),
                     'cone_vis_loc',
                     camera_frame)
-    
-    def get_cone_pose(self, detection):
-        cone_poses = []
 
-        cone_x = 0.0
-        cone_y = 0.0
-        cone_z = 0.0
+    def _handle_pose_broadcast(self, poses, camera_frame):
+        if self.tf_listener.canTransform('map', camera_frame, rospy.Time()):
+            p_array = PoseArray()
+            p_array.header = Header()
+            p_array.header.frame_id = 'map'
+            p_array.header.stamp = rospy.get_rostime()
+            # loop through np array of poses - [[x,y,z]]
+            # rospy.loginfo(poses)
+            for pose in poses:
+                l_pose = pose.reshape((3,)).tolist()
+                p = PoseStamped()
+                p.header = Header()
+                p.header.frame_id = camera_frame
+                p.header.stamp = self.tf_listener.getLatestCommonTime('map', camera_frame)
+                p.pose = Pose()
+                p.pose.position.x = l_pose[0]
+                p.pose.position.y = l_pose[1]
+                p.pose.position.z = l_pose[2]
+                # add the pose of the pose stamped to the pose array
+                p_array.poses.append(self.tf_listener.transformPose('map', p).pose)
+            self.pose_pub.publish(p_array)
+    
+    def get_vision_pose(self, detection):
+        vision_poses = None
+
+        object_x = 0.0
+        object_y = 0.0
+        object_z = 0.0
 
         for i, detect in enumerate(detection.detections):
             depth_image = detect.source_img
@@ -91,51 +124,29 @@ class VisionPose(object):
                     center_pixel_depth = cv_depth_image[y_center, x_center]/1000
                     
                 img_height, img_width = cv_depth_image.shape
-                # distance = self.depth_region(cv_depth_image, detect)
                 distance = float(center_pixel_depth)
                 if isinf(distance) or isnan(distance):
-                    cone_x = None
-                    cone_y = None
-                    cone_z = None
+                    object_x = None
+                    object_y = None
+                    object_z = None
                 
                 else:                
                     bearing_horiz, bearing_vert, object_range = self.calculate_bearing(img_width, img_height, x_center, y_center, distance)
 
-                    cone_x = cos(radians(bearing_horiz)) * center_pixel_depth
-                    cone_y = sin(radians(bearing_horiz)) * center_pixel_depth * -1
-                    cone_z = sin(radians(bearing_vert)) * center_pixel_depth * -1
-                    
-                    rospy.loginfo('Bearing: {} Depth: {}'.format(bearing_horiz, center_pixel_depth))
+                    object_x = cos(radians(bearing_horiz)) * center_pixel_depth
+                    object_y = sin(radians(bearing_horiz)) * center_pixel_depth * -1
+                    object_z = sin(radians(bearing_vert)) * center_pixel_depth * -1
+
+                    if vision_poses is None:
+                        vision_poses = np.array([object_x, object_y, object_z])[np.newaxis]
+                    else:
+                        app_array = np.array([object_x, object_y, object_z])[np.newaxis]
+                        vision_poses = np.append(vision_poses, app_array, axis=0)
+                    # rospy.loginfo('Bearing: {} Depth: {}'.format(bearing_horiz, center_pixel_depth))
             except CvBridgeError as e:
                 rospy.logerr(e)
 
-            return cone_x, cone_y, cone_z
-            
-    
-    def depth_region(self, depth_map, detection):
-        # grab depths along a strip and take average
-        # go half way
-        box = detection.bbox
-
-        y_center = int(box.center.y)
-        x_center = int(box.center.x)
-        w = box.size_x
-        h = box.size_y
-
-        starting_width = int(w/6)
-        end_width = int(w - starting_width)
-        x_center = x_center - starting_width
-        pixie_avg = 0.0
-
-        for i in range(starting_width, end_width):
-            assert (depth_map.shape[1] > end_width)
-            assert (depth_map.shape[1] > x_center)
-            pixel_depth = depth_map[y_center, x_center]
-            pixie_avg += pixel_depth
-            x_center += 1
-
-        pixie_avg = (pixie_avg/(end_width - starting_width))
-        return float(pixie_avg)
+        return vision_poses
 
     def calculate_bearing(self, img_width, img_height, object_x, object_y, object_depth):
         # only consider horizontal FOV.
@@ -150,7 +161,6 @@ class VisionPose(object):
         # Positive x is to the right, positive y is upwards
         obj_x = ((img_width / 2.0) - object_x) * -1
         obj_y = ((img_height / 2.0) - object_y) * -1
-        rospy.loginfo('Object X: {}'.format(img_width))
 
         # Calculate angle of object in relation to center of image
         bearing_horiz = obj_x*horiz_res        # degrees
@@ -168,7 +178,6 @@ class VisionPose(object):
 
 if __name__ == '__main__':
     rospy.init_node('vision_pose')
-
     try:
         cp = VisionPose()
     except rospy.ROSInterruptException:

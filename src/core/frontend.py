@@ -74,10 +74,6 @@ class YOLO(object):
             self.feature_extractor = FullYoloFeature(self.input_size, self.backend_path)
         elif backend == 'tiny_yolo':
             self.feature_extractor = TinyYoloFeature(self.input_size, self.backend_path)
-        elif backend == 'vgg16':
-            self.feature_extractor = VGG16Feature(self.input_size)
-        elif backend == 'res_net_50':
-            self.feature_extractor = ResNet50Feature(self.input_size)
         else:
             raise Exception('Architecture not supported! Only support Full Yolo, Tiny Yolo, MobileNet, SqueezeNet, VGG16, ResNet50, and Inception3 at the moment!')
 
