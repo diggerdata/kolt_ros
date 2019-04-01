@@ -1,8 +1,8 @@
-# yolov2_ros
+# kolt_ros
 
-[![Build Status](https://travis-ci.org/diggerdata/yolov2_ros.svg?branch=master)](https://travis-ci.org/diggerdata/yolov2_ros) [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) ![ros Kinetic](https://img.shields.io/badge/ROS-Kinetic-red.svg)
+[![Build Status](https://travis-ci.org/diggerdata/yolov2_ros.svg?branch=master)](https://travis-ci.org/diggerdata/yolov2_ros) [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause) ![ros Melodic](https://img.shields.io/badge/ROS-Melodic-red.svg)
 
-This package is a ROS implementation of the YOLOv2 algorithm using Keras and TensorFlow.
+This package is a ROS implementation of the YOLOv2 algorithm using Keras and TensorFlow with a few added features, such as an object tracker.
 
 **Keywords:** YOLOv2, Keras, TensorFlow
 
@@ -14,7 +14,7 @@ The source code is released under a [BSD 3-Clause license](ros_package_template/
 **Maintainer:** Nathan Rosenberg, narosenberg@wpi.edu  
 **Affiliation:** [Robotics Engineering, Worcester Polytechnic Institute](https://www.wpi.edu/academics/departments/robotics-engineering)  
 
-The yolov2_ros package has been tested under [ROS] Kinetic and Ubuntu 16.04. This is research code, expect that it changes often and any fitness for a particular purpose is disclaimed.
+The kolt_ros package has been tested under [ROS] Melodic and Ubuntu 18.04. This is research code, expect that it changes often and any fitness for a particular purpose is disclaimed.
 
 
 <!-- ![Example image](doc/example.jpg)
