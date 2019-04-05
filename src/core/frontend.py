@@ -1,20 +1,28 @@
-from keras.models import Model
-from keras.layers import Reshape, Activation, Conv2D, Input, MaxPooling2D, BatchNormalization, Flatten, Dense, Lambda
-from keras.layers.advanced_activations import LeakyReLU
-import tensorflow as tf
-import numpy as np
 import os
+from datetime import datetime
+
 import cv2
-from .utils import decode_netout, compute_overlap, compute_ap
-from keras.applications.mobilenet import MobileNet
-from keras.layers.merge import concatenate
-from keras.optimizers import SGD, Adam, RMSprop
-from .preprocessing import BatchGenerator
-from keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
-from keras.utils import multi_gpu_model, print_summary
-from .backend import TinyYoloFeature, FullYoloFeature, MobileNetFeature, SqueezeNetFeature, Inception3Feature, VGG16Feature, ResNet50Feature
-from tensorflow.python.client import device_lib
+import numpy as np
 import rospy
+
+import tensorflow as tf
+from keras.applications.mobilenet import MobileNet
+from keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
+from keras.layers import (Activation, BatchNormalization, Conv2D, Dense,
+                          Flatten, Input, Lambda, MaxPooling2D, Reshape)
+from keras.layers.advanced_activations import LeakyReLU
+from keras.layers.merge import concatenate
+from keras.models import Model
+from keras.optimizers import SGD, Adam, RMSprop
+from keras.utils import multi_gpu_model, print_summary
+from tensorflow.python.client import device_lib
+
+from .backend import (FullYoloFeature, Inception3Feature, MobileNetFeature,
+                      ResNet50Feature, SqueezeNetFeature, TinyYoloFeature,
+                      VGG16Feature)
+from .preprocessing import BatchGenerator
+from .utils import compute_ap, compute_overlap, decode_netout
+
 
 class ModelMGPU(Model):
     """
@@ -337,7 +345,7 @@ class YOLO(object):
 
         early_stop = EarlyStopping(monitor='val_loss', 
                            min_delta=0.001, 
-                           patience=3, 
+                           patience=30, 
                            mode='min', 
                            verbose=1)
         checkpoint = ModelCheckpoint(saved_weights_name, 
@@ -362,9 +370,10 @@ class YOLO(object):
                                 verbose          = 2 if debug else 1,
                                 validation_data  = valid_generator,
                                 validation_steps = len(valid_generator) * valid_times,
+                                use_multiprocessing = True,
                                 callbacks        = [early_stop, checkpoint, tensorboard], 
-                                workers          = 3,
-                                max_queue_size   = 8)      
+                                workers          = 8,
+                                max_queue_size   = 100)      
 
         ############################################
         # Compute mAP on the validation set

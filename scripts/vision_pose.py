@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function
 
 from copy import deepcopy, copy
 from math import cos, isinf, isnan, pi, radians, sin
+from datetime import datetime
 
 import actionlib
 import numpy as np
@@ -37,13 +38,13 @@ class VisionPose(object):
         self.bridge = CvBridge()
         self.tf_listener = tf.TransformListener()
         
-        self.rate = 10
+        self.rate = 30
         self.tracker = Tracker(1, 100, 10, 255, self.rate)
 
         self.detection_sub = rospy.Subscriber(self.detection_topic, Detection2DArray, self._detection_cb)
         self.odom_sub = rospy.Subscriber(self.odom_topic, Odometry, self._odom_cb)
         
-        self.pose_pub = rospy.Publisher(self.pose_topic, PoseArray)
+        self.pose_pub = rospy.Publisher(self.pose_topic, PoseArray, queue_size=1)
 
         rate = rospy.Rate(self.rate)
         last_detection = Detection2DArray()
@@ -52,8 +53,8 @@ class VisionPose(object):
             if cur_detection.header.stamp != last_detection.header.stamp:
                 vision_poses = self.get_vision_pose(cur_detection)
                 if vision_poses is not None:
-                    tracked_poses = self.tracker.update(vision_poses)
-                    self._handle_pose_broadcast(tracked_poses, self.camera_frame)
+                    # tracked_poses = self.tracker.update(vision_poses)
+                    self._handle_pose_broadcast(vision_poses, self.camera_frame)
                     # rospy.loginfo(len(self.tracker.update(vision_poses)))
                 # if x and y and z != None:
                     # self._handle_transform(self.camera_frame, x, y, z)

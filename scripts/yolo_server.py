@@ -57,7 +57,7 @@ class YoloServer(object):
         cv_image = None
         detection_array = Detection2DArray()
         detections = []
-        boxes = None
+        boxes = []
         
         try:
             cv_image = self.bridge.imgmsg_to_cv2(req.image, "bgr8")
@@ -65,9 +65,9 @@ class YoloServer(object):
             rospy.logerr(e)
         try:
             boxes = self.yolo.predict(cv_image)
-        except SystemError:
+        except Exception:
             pass
-        # rospy.loginfo('Found {} boxes'.format(len(boxes)))
+        rospy.loginfo('Found {} boxes'.format(len(boxes)))
         for box in boxes:
             detection = Detection2D()
             results = []

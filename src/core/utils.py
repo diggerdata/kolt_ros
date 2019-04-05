@@ -138,7 +138,6 @@ def decode_netout(netout, anchors, nb_class, max_box_per_image, obj_threshold=0.
                         
     # remove the boxes which are less likely than a obj_threshold
     boxes = [box for box in boxes if box.get_score() > obj_threshold]
-    
     return sorted(boxes, key=lambda box: box.score, reverse=True)[:max_box_per_image]
 
 def compute_overlap(a, b):
