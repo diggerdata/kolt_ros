@@ -34,12 +34,22 @@ class KalmanFilter(object):
         # measurement matrix
         self.H = np.matrix([[1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
                             [0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
-                            [0.0, 0.0, 1.0, 0.0, 0.0, 0.0]])
+                            [0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+                            [0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                            [0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+                            [0.0, 0.0, 0.0, 0.0, 0.0, 1.0]])
         # measurement noise covariance
         self.ra = ra
-        self.R = np.matrix([[ra, 0.0, 0.0],
-                            [0.0, ra, 0.0],
-                            [0.0, 0.0, ra]])
+        # self.R = np.matrix([[ra, 0.0, 0.0],
+        #                     [0.0, ra, 0.0],
+        #                     [0.0, 0.0, ra]])
+
+        self.R = np.matrix([[ra, 0.0, 0.0, 0.0, 0.0, 0.0],
+                            [0.0, ra, 0.0, 0.0, 0.0, 0.0],
+                            [0.0, 0.0, ra, 0.0, 0.0, 0.0],
+                            [0.0, 0.0, 0.0, ra, 0.0, 0.0],
+                            [0.0, 0.0, 0.0, 0.0, ra, 0.0],
+                            [0.0, 0.0, 0.0, 0.0, 0.0, ra]])
         # process noise covariance
         self.sv = sv
         self.G = np.matrix([[1/2.0*self.dt**2],
@@ -105,11 +115,11 @@ class KalmanFilter(object):
         else:  # update using detection
             self.m = m
         # Compute the Kalman Gain
-        # vel = (self.m - self.last_result[:3]) / self.dt
+        vel = (self.m - self.last_result[:3]) / self.dt
         self.S =  self.H*self.P*self.H.T + self.R
         self.K = (self.P*self.H.T) * np.linalg.pinv(self.S)
         # Update the estimate via z
-        self.Z = self.m.reshape(self.H.shape[0],1)
+        self.Z = np.append(self.m, vel, axis=0).reshape(self.H.shape[0],1)
         self.y = self.Z - (self.H*self.x)  # Innovation or Residual
         self.x = self.x + (self.K*self.y)
         # Update the error covariance
