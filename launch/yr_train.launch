@@ -1,15 +1,15 @@
 <launch>
     <!-- NOTE: Training images need to be in the VOC format. See readme for suggestions. -->
-    <arg name="train_image_path" value="/home/diggerdata/catkin_ws/src/kolt_ros/datasets/cone_dataset/train_img/" />
-    <arg name="train_annot_path" value="/home/diggerdata/catkin_ws/src/kolt_ros/datasets/cone_dataset/train_ann/" />
+    <arg name="train_image_path" value="/home/diggerdata/catkin_ws/src/kolt_ros/datasets/coco/images/train2014/" />
+    <arg name="train_annot_path" value="/home/diggerdata/catkin_ws/src/kolt_ros/datasets/coco/train/" />
    
     <!-- The following are optional. If not given will split the training set 0.8/0.2 - train/valid. -->
-    <arg name="valid_image_path" value="/home/diggerdata/catkin_ws/src/kolt_ros/datasets/cone_dataset/val_img/" />
-    <arg name="valid_annot_path" value="/home/diggerdata/catkin_ws/src/kolt_ros/datasets/cone_dataset/val_ann/" />
+    <arg name="valid_image_path" value="/home/diggerdata/catkin_ws/src/kolt_ros/datasets/coco/images/val2014/" />
+    <arg name="valid_annot_path" value="/home/diggerdata/catkin_ws/src/kolt_ros/datasets/coco/val/" />
 
     <node pkg="kolt" name="yolo_train" type="yolo_train.py" output="screen">
         <param name="n_gpu" type="int" value="2" />
-        <param name="backend" type="str" value="tiny_yolo" />
+        <param name="backend" type="str" value="full_yolo" />
         <param name="input_size" type="int" value="416" />
         <param name="max_number_detections" type="int" value="10" />
         <rosparam param="anchors">[0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828]</rosparam>
@@ -21,9 +21,9 @@
         <param name="train_image_folder" type="str" value="$(arg train_image_path)" />
         <param name="valid_annot_folder" type="str" value="$(arg valid_annot_path)" />
         <param name="valid_image_folder" type="str" value="$(arg valid_image_path)" />
-        <param name="saved_weights_name" type="str" value="$(find kolt)/weights/tiny_yolo_cones.h5" />
+        <param name="saved_weights_name" type="str" value="$(find kolt)/weights/full_yolo_coco_2.h5" />
 
-        <rosparam param="labels">['trafficcone']</rosparam>
+        <rosparam param="labels">['person']</rosparam>
         <param name="train_times" type="int" value="8" />
         <param name="valid_times" type="int" value="1" />
         <param name="nb_epochs" type="int" value="50" />

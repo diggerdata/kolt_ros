@@ -1,0 +1,31 @@
+<launch>
+    
+    <arg name="odometry_frame" default="odom" />
+
+    <group ns="zed">
+        <include file="$(find zed_wrapper)/launch/zed_camera.launch">
+            <!-- compliant mode for rviz -->
+            <arg name="odometry_frame" value="$(arg odometry_frame)" />
+        </include>
+    </group>
+     
+    <node pkg="kolt" name="yolo_predict" type="yolo_predict.py" output="screen">
+        <param name="camera_id" type="str" value="0" />
+        <param name="image_topic" type="str" value="/zed/rgb/image_raw_color" />
+        <param name="depth_image_topic" type="str" value="/zed/depth/depth_registered" />
+        <param name="image_type" type="str" value="rgbd" />
+        
+    </node>
+    
+    <include file="$(find kolt)/launch/includes/yolo_server_person.launch" />
+    
+
+    <node pkg="kolt" name="vision_pose" type="vision_pose.py" output="screen">
+        <param name="camera_type" type="str" value="zed" />
+        <param name="camera_frame" type="str" value="zed_left_camera_frame" />
+        <param name="detection_topic" type="str" value="/yolo_predict/detected" />
+        <param name="odom_topic" type="str" value="/zed/odom" />
+        <param name="horiz_fov" type="double" value="85.0" />
+        <param name="vert_fov" type="double" value="54.0" />
+    </node>
+</launch>

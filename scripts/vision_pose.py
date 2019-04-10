@@ -11,12 +11,13 @@ import numpy as np
 import rospy
 import tf
 from cv_bridge import CvBridge, CvBridgeError
-from geometry_msgs.msg import (Pose, PoseArray, PoseStamped,
+from geometry_msgs.msg import (Pose, Point, PoseArray, PoseStamped,
                                PoseWithCovarianceStamped)
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Header
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from vision_msgs.msg import Detection2DArray
+from visualization_msgs.msg import Marker, MarkerArray
 
 from core import Tracker
 
@@ -39,12 +40,13 @@ class VisionPose(object):
         self.tf_listener = tf.TransformListener()
         
         self.rate = 30
-        self.tracker = Tracker(1, 100, 10, 255, self.rate)
+        self.tracker = Tracker(1, 100, 200, 255, self.rate, ra=1.5, sv=10.0)
 
         self.detection_sub = rospy.Subscriber(self.detection_topic, Detection2DArray, self._detection_cb)
         self.odom_sub = rospy.Subscriber(self.odom_topic, Odometry, self._odom_cb)
         
         self.pose_pub = rospy.Publisher(self.pose_topic, PoseArray, queue_size=1)
+        self.path_pub = rospy.Publisher('paths', MarkerArray, queue_size=1)
 
         rate = rospy.Rate(self.rate)
         last_detection = Detection2DArray()
@@ -53,8 +55,9 @@ class VisionPose(object):
             if cur_detection.header.stamp != last_detection.header.stamp:
                 vision_poses = self.get_vision_pose(cur_detection)
                 if vision_poses is not None:
-                    # tracked_poses = self.tracker.update(vision_poses)
-                    self._handle_pose_broadcast(vision_poses, self.camera_frame)
+                    tracked_poses, tracked_paths = self.tracker.update(vision_poses)
+                    self._handle_pose_broadcast(tracked_poses, self.camera_frame)
+                    self._handle_path_vis_broadcast(tracked_paths, self.camera_frame)
                     # rospy.loginfo(len(self.tracker.update(vision_poses)))
                 # if x and y and z != None:
                     # self._handle_transform(self.camera_frame, x, y, z)
@@ -77,6 +80,43 @@ class VisionPose(object):
                     'cone_vis_loc',
                     camera_frame)
 
+    def _handle_path_vis_broadcast(self, paths, camera_frame):
+        if self.tf_listener.canTransform('map', camera_frame, rospy.Time()):
+            m_array = MarkerArray()
+            # loop through np array of poses - [[x,y,z]]
+            # rospy.loginfo(poses)
+            for id, path in paths.items():
+                if len(path) % 2 == 0:
+                    m = Marker()
+                    m.id = id
+                    m.header = Header()
+                    m.header.frame_id = camera_frame
+                    m.header.stamp = self.tf_listener.getLatestCommonTime('map', camera_frame)
+                    m.type = 5
+                    m.action = 0
+                    m.scale.x = 0.01
+                    m.pose.position.x = 0.0
+                    m.pose.position.y = 0.0
+                    m.pose.position.z = 0.0
+                    m.pose.orientation.x = 0.0
+                    m.pose.orientation.y = 0.0
+                    m.pose.orientation.z = 0.0
+                    m.pose.orientation.w = 1.0
+                    m.color.a = 1.0
+                    m.color.b = 1.0
+                    for point in path:
+                        pose = PoseStamped()
+                        pose.header = Header()
+                        pose.header.frame_id = camera_frame
+                        pose.header.stamp = self.tf_listener.getLatestCommonTime('map', camera_frame)
+                        pose.pose = Pose()
+                        pose.pose.position.x = point[0]
+                        pose.pose.position.y = point[1]
+                        pose.pose.position.z = point[2]
+                        m.points.append(self.tf_listener.transformPose('map', pose).pose.position)
+                    m_array.markers.append(m)
+            self.path_pub.publish(m_array)
+    
     def _handle_pose_broadcast(self, poses, camera_frame):
         if self.tf_listener.canTransform('map', camera_frame, rospy.Time()):
             p_array = PoseArray()
@@ -86,15 +126,14 @@ class VisionPose(object):
             # loop through np array of poses - [[x,y,z]]
             # rospy.loginfo(poses)
             for pose in poses:
-                l_pose = pose.reshape((3,)).tolist()
                 p = PoseStamped()
                 p.header = Header()
                 p.header.frame_id = camera_frame
                 p.header.stamp = self.tf_listener.getLatestCommonTime('map', camera_frame)
                 p.pose = Pose()
-                p.pose.position.x = l_pose[0]
-                p.pose.position.y = l_pose[1]
-                p.pose.position.z = l_pose[2]
+                p.pose.position.x = pose[0]
+                p.pose.position.y = pose[1]
+                p.pose.position.z = pose[2]
                 # add the pose of the pose stamped to the pose array
                 p_array.poses.append(self.tf_listener.transformPose('map', p).pose)
             self.pose_pub.publish(p_array)

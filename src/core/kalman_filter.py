@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import division, print_function
 
 import numpy as np
 
@@ -11,7 +11,7 @@ class KalmanFilter(object):
     Attributes: None
     """
 
-    def __init__(self, rate=10):
+    def __init__(self, rate=10, ra=1.5, sv=3.0):
         """Initialize variable used by Kalman Filter class
         Args:
             None
@@ -19,21 +19,39 @@ class KalmanFilter(object):
             None
         """
         self.dt = 1/rate  # delta time
-
-        self.A = np.eye(3)  # matrix in observation equations
-        self.u = np.zeros((3, 1))  # previous state vector
-
-        # (x,y,z) tracking object center
-        self.b = np.zeros((3,1))  # vector of observations
-
-        self.P = np.diag((3.0, 3.0, 3.0))  # covariance matrix
-        self.F = np.array([[1.0, self.dt, 0.0],
-                           [0.0, 1.0, self.dt], 
-                           [0.0, 0.0, 1.0]])  # state transition mat
-
-        self.Q = np.eye(self.u.shape[0])  # process noise matrix
-        self.R = np.eye(self.b.shape[0])  # observation noise matrix
-        self.last_result = np.zeros((3,1))
+        self.m = np.zeros((3,1))
+        # initial state
+        self.x = np.matrix([[0.0, 0.0, 0.0, 0.0, 0.0, 0.0]]).T
+        # initial uncertainty
+        self.P = 100.0*np.eye(6)
+        # dynamic matrix
+        self.A = np.matrix([[1.0, 0.0, 0.0, self.dt, 0.0,     0.0],
+                            [0.0, 1.0, 0.0, 0.0,     self.dt, 0.0],
+                            [0.0, 0.0, 1.0, 0.0,     0.0,     self.dt],
+                            [0.0, 0.0, 0.0, 1.0,     0.0,     0.0],
+                            [0.0, 0.0, 0.0, 0.0,     1.0,     0.0],
+                            [0.0, 0.0, 0.0, 0.0,     0.0,     1.0]])
+        # measurement matrix
+        self.H = np.matrix([[1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                            [0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+                            [0.0, 0.0, 1.0, 0.0, 0.0, 0.0]])
+        # measurement noise covariance
+        self.ra = ra
+        self.R = np.matrix([[ra, 0.0, 0.0],
+                            [0.0, ra, 0.0],
+                            [0.0, 0.0, ra]])
+        # process noise covariance
+        self.sv = sv
+        self.G = np.matrix([[1/2.0*self.dt**2],
+                            [1/2.0*self.dt**2],
+                            [1/2.0*self.dt**2],
+                            [self.dt],
+                            [self.dt],
+                            [self.dt]])
+        self.Q = self.G*self.G.T*self.sv
+        # identity matrix
+        self.I = np.eye(6)
+        self.last_result = np.zeros((6,1))
 
     def predict(self):
         """Predict state vector u and variance of uncertainty P (covariance).
@@ -52,14 +70,14 @@ class KalmanFilter(object):
         Return:
             vector of predicted state estimate
         """
-        # Predicted state estimate
-        self.u = np.dot(self.F, self.u)
-        # Predicted estimate covariance
-        self.P = np.dot(self.F, np.dot(self.P, self.F.T)) + self.Q
-        self.last_result = self.u  # same last predicted result
-        return self.u
+        # Project the state ahead
+        self.x = self.A*self.x 
+        # Project the error covariance ahead
+        self.P = self.A*self.P*self.A.T + self.Q
+        self.last_result = self.x  # same last predicted result
+        return self.x
 
-    def correct(self, b, flag):
+    def correct(self, m, flag):
         """Correct or update state vector u and variance of uncertainty P (covariance).
         where,
         u: predicted state vector u
@@ -83,13 +101,18 @@ class KalmanFilter(object):
             predicted state vector u
         """
         if not flag:  # update using prediction
-            self.b = self.last_result
+            self.m = self.last_result[:3]
         else:  # update using detection
-            self.b = b
-        C = np.dot(self.A, np.dot(self.P, self.A.T)) + self.R
-        K = np.dot(self.P, np.dot(self.A.T, np.linalg.inv(C)))
-
-        self.u = self.u + np.dot(K, (self.b - np.dot(self.A, self.u)))
-        self.P = self.P - np.dot(K, np.dot(C, K.T))
-        self.last_result = self.u
-        return self.u
+            self.m = m
+        # Compute the Kalman Gain
+        # vel = (self.m - self.last_result[:3]) / self.dt
+        self.S =  self.H*self.P*self.H.T + self.R
+        self.K = (self.P*self.H.T) * np.linalg.pinv(self.S)
+        # Update the estimate via z
+        self.Z = self.m.reshape(self.H.shape[0],1)
+        self.y = self.Z - (self.H*self.x)  # Innovation or Residual
+        self.x = self.x + (self.K*self.y)
+        # Update the error covariance
+        self.P = (self.I - (self.K*self.H))*self.P
+        self.last_result = self.x
+        return self.x

@@ -373,7 +373,7 @@ class YOLO(object):
                                 use_multiprocessing = True,
                                 callbacks        = [early_stop, checkpoint, tensorboard], 
                                 workers          = 8,
-                                max_queue_size   = 100)      
+                                max_queue_size   = 10)      
 
         ############################################
         # Compute mAP on the validation set

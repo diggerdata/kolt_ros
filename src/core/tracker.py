@@ -14,7 +14,7 @@ class Track(object):
         None
     """
 
-    def __init__(self, prediction, trackIdCount, rate):
+    def __init__(self, prediction, trackIdCount, rate, ra=1.5, sv=3.0):
         """Initialize variables used by Track class
         Args:
             prediction: predicted centroids of object to be tracked
@@ -23,7 +23,7 @@ class Track(object):
             None
         """
         self.track_id = trackIdCount  # identification of each track object
-        self.KF = KalmanFilter(rate=rate)  # KF instance to track this object
+        self.KF = KalmanFilter(rate=rate, ra=ra, sv=sv)  # KF instance to track this object
         self.prediction = np.asarray(prediction)  # predicted centroids (x,y,z)
         self.skipped_frames = 0  # number of frames skipped undetected
         self.trace = []  # trace path
@@ -35,12 +35,7 @@ class Tracker(object):
         None
     """
 
-    def __init__(self, 
-        dist_thresh, 
-        max_frames_to_skip, 
-        max_trace_length,
-        track_id_count,
-        rate):
+    def __init__(self, dist_thresh, max_frames_to_skip, max_trace_length, track_id_count, rate, ra=1.5, sv=3.0):
         """Initialize variable used by Tracker class
         Args:
             dist_thresh: distance threshold. When exceeds the threshold,
@@ -53,9 +48,11 @@ class Tracker(object):
             None
         """
         self.rate = rate
+        self.sv = sv
+        self.ra = ra
         self.dist_thresh = dist_thresh
         self.max_frames_to_skip = max_frames_to_skip
-        self.max_trace_length = max_trace_length
+        self.max_trace_length = max_trace_length + 1
         self.tracks = []
         self.track_id_count = track_id_count
 
@@ -83,7 +80,7 @@ class Tracker(object):
         # Create tracks if no tracks vector found
         if (len(self.tracks) == 0):
             for i in range(len(detections)):
-                track = Track(detections[i].T, self.track_id_count, self.rate)
+                track = Track(detections[i].T, self.track_id_count, self.rate, ra=self.ra, sv=self.sv)
                 self.track_id_count += 1
                 self.tracks.append(track)
 
@@ -182,4 +179,9 @@ class Tracker(object):
         # return self.tracks
 
     def _tracks_to_poses(self):
-        return [a.prediction for a in self.tracks]
+        predictions = []
+        traces = {}
+        for track in self.tracks:
+            predictions.append(track.prediction)
+            traces[track.track_id] = track.trace
+        return predictions, traces
