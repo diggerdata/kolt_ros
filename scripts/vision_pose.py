@@ -40,7 +40,7 @@ class VisionPose(object):
         self.tf_listener = tf.TransformListener()
         
         self.rate = 30
-        self.tracker = Tracker(1, 100, 200, 255, self.rate, ra=10.0, sv=100000.0)
+        self.tracker = Tracker(1, 100, 200, 255, self.rate, ra=1.0, sv=100000.0)
 
         self.detection_sub = rospy.Subscriber(self.detection_topic, Detection2DArray, self._detection_cb)
         self.odom_sub = rospy.Subscriber(self.odom_topic, Odometry, self._odom_cb)
@@ -93,7 +93,7 @@ class VisionPose(object):
                     m.header.frame_id = camera_frame
                     m.header.stamp = self.tf_listener.getLatestCommonTime('map', camera_frame)
                     m.type = 5
-                    m.action = 3
+                    m.action = 0
                     m.scale.x = 0.01
                     m.pose.position.x = 0.0
                     m.pose.position.y = 0.0
