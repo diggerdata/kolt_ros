@@ -16,6 +16,10 @@ The source code is released under a [BSD 3-Clause license](ros_package_template/
 
 The kolt_ros package has been tested under [ROS] Melodic and Ubuntu 18.04. This is research code, expect that it changes often and any fitness for a particular purpose is disclaimed.
 
+### Documentation
+
+You can find the documentation for KOLT on the [wiki](https://github.com/diggerdata/kolt_ros/wiki).
+
 
 <!-- ![Example image](doc/example.jpg)
 
