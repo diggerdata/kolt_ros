@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -9,19 +7,7 @@ from .kalman_filter import KalmanFilter
 from scipy.optimize import linear_sum_assignment
 
 class Track(object):
-    """Track class for every object to be tracked
-    Attributes:
-        None
-    """
-
     def __init__(self, prediction, trackIdCount, rate, ra=1.5, sv=3.0):
-        """Initialize variables used by Track class
-        Args:
-            prediction: predicted centroids of object to be tracked
-            trackIdCount: identification of each track object
-        Return:
-            None
-        """
         self.track_id = trackIdCount  # identification of each track object
         self.KF = KalmanFilter(rate=rate, ra=ra, sv=sv)  # KF instance to track this object
         self.prediction = np.asarray(prediction)  # predicted centroids (x,y,z)
@@ -30,23 +16,7 @@ class Track(object):
 
 
 class Tracker(object):
-    """Tracker class that updates track vectors of object tracked
-    Attributes:
-        None
-    """
-
     def __init__(self, dist_thresh, max_frames_to_skip, max_trace_length, track_id_count, rate, ra=1.5, sv=3.0):
-        """Initialize variable used by Tracker class
-        Args:
-            dist_thresh: distance threshold. When exceeds the threshold,
-                         track will be deleted and new track is created
-            max_frames_to_skip: maximum allowed frames to be skipped for
-                                the track object undetected
-            max_trace_lenght: trace path history length
-            track_id_count: identification of each track object
-        Return:
-            None
-        """
         self.rate = rate
         self.sv = sv
         self.ra = ra
@@ -57,24 +27,6 @@ class Tracker(object):
         self.track_id_count = track_id_count
 
     def update(self, detections):
-        """Update tracks vector using following steps:
-            - Create tracks if no tracks vector found
-            - Calculate cost using sum of square distance
-              between predicted vs detected centroids
-            - Using Hungarian Algorithm assign the correct
-              detected measurements to predicted tracks
-              https://en.wikipedia.org/wiki/Hungarian_algorithm
-            - Identify tracks with no assignment, if any
-            - If tracks are not detected for long time, remove them
-            - Now look for un_assigned detects
-            - Start new tracks
-            - Update KalmanFilter state, lastResults and tracks trace
-        Args:
-            detections: detected centroids of object to be tracked
-        Return:
-            self.tracks
-        """
-
         # TODO: Simplify whole thing
 
         # Create tracks if no tracks vector found
@@ -96,16 +48,6 @@ class Tracker(object):
                 cost[i,:] = dist
             except:
                 continue
-        # for i in range(len(self.tracks)):
-        #     for j in range(len(detections)):
-        #         try:
-        #             diff = self.tracks[i].prediction - detections[j]
-        #             distance = np.sqrt(diff[0][0]*diff[0][0] +
-        #                                diff[1][0]*diff[1][0])
-        #             cost[i][j] = distance
-        #         except:
-        #             pass
-
         # Let's average the squared ERROR
         cost = (0.5) * cost
         # Using Hungarian Algorithm assign the correct detected measurements

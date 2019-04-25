@@ -58,9 +58,7 @@ class VisionPose(object):
                     tracked_poses, tracked_paths = self.tracker.update(vision_poses)
                     self._handle_pose_broadcast(tracked_poses, self.camera_frame)
                     self._handle_path_vis_broadcast(tracked_paths, self.camera_frame)
-                    # rospy.loginfo(len(self.tracker.update(vision_poses)))
-                # if x and y and z != None:
-                    # self._handle_transform(self.camera_frame, x, y, z)
+
             last_detection = cur_detection
             rate.sleep()
 
@@ -84,7 +82,6 @@ class VisionPose(object):
         if self.tf_listener.canTransform('map', camera_frame, rospy.Time()):
             m_array = MarkerArray()
             # loop through np array of poses - [[x,y,z]]
-            # rospy.loginfo(poses)
             for id, path in paths.items():
                 if len(path) % 2 == 0:
                     m = Marker()

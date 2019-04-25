@@ -18,8 +18,6 @@ VGG16_BACKEND_PATH      = "../../weights/vgg16_backend.h5"       # should be hos
 RESNET50_BACKEND_PATH   = "../../weights/resnet50_backend.h5"    # should be hosted on a server
 
 class BaseFeatureExtractor(object):
-    """docstring for ClassName"""
-
     # to be defined in each subclass
     def __init__(self, input_size, backend_path):
         raise NotImplementedError("error message")
@@ -35,7 +33,6 @@ class BaseFeatureExtractor(object):
         return self.feature_extractor(input_image)
 
 class FullYoloFeature(BaseFeatureExtractor):
-    """docstring for ClassName"""
     def __init__(self, input_size, backend_path):
         input_image = Input(shape=(input_size, input_size, 3))
 
@@ -171,7 +168,6 @@ class FullYoloFeature(BaseFeatureExtractor):
         return image / 255.
 
 class TinyYoloFeature(BaseFeatureExtractor):
-    """docstring for ClassName"""
     def __init__(self, input_size, backend_path):
         input_image = Input(shape=(input_size, input_size, 3))
 
@@ -207,7 +203,6 @@ class TinyYoloFeature(BaseFeatureExtractor):
         return image / 255.
 
 class MobileNetFeature(BaseFeatureExtractor):
-    """docstring for ClassName"""
     def __init__(self, input_size, backend_path):
         input_image = Input(shape=(input_size, input_size, 3))
 
@@ -226,7 +221,6 @@ class MobileNetFeature(BaseFeatureExtractor):
         return image		
 
 class SqueezeNetFeature(BaseFeatureExtractor):
-    """docstring for ClassName"""
     def __init__(self, input_size, backend_path):
 
         # define some auxiliary variables and the fire module
@@ -285,7 +279,6 @@ class SqueezeNetFeature(BaseFeatureExtractor):
         return image    
 
 class Inception3Feature(BaseFeatureExtractor):
-    """docstring for ClassName"""
     def __init__(self, input_size, backend_path):
         input_image = Input(shape=(input_size, input_size, 3))
 
@@ -304,7 +297,6 @@ class Inception3Feature(BaseFeatureExtractor):
         return image
 
 class VGG16Feature(BaseFeatureExtractor):
-    """docstring for ClassName"""
     def __init__(self, input_size, backend_path):
         vgg16 = VGG16(input_shape=(input_size, input_size, 3), include_top=False)
         #vgg16.load_weights(VGG16_BACKEND_PATH)
@@ -322,7 +314,6 @@ class VGG16Feature(BaseFeatureExtractor):
         return image 
 
 class ResNet50Feature(BaseFeatureExtractor):
-    """docstring for ClassName"""
     def __init__(self, input_size, backend_path):
         resnet50 = ResNet50(input_shape=(input_size, input_size, 3), include_top=False)
         resnet50.layers.pop() # remove the average pooling layer

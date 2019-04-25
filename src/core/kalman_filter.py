@@ -4,20 +4,7 @@ import numpy as np
 
 
 class KalmanFilter(object):
-    """Kalman Filter class keeps track of the estimated state of
-    the system and the variance or uncertainty of the estimate.
-    Predict and Correct methods implement the functionality
-    Reference: https://en.wikipedia.org/wiki/Kalman_filter
-    Attributes: None
-    """
-
     def __init__(self, rate=10, ra=1.5, sv=3.0):
-        """Initialize variable used by Kalman Filter class
-        Args:
-            None
-        Return:
-            None
-        """
         self.dt = 1/rate  # delta time
         self.m = np.zeros((3,1))
         # initial state
@@ -64,22 +51,6 @@ class KalmanFilter(object):
         self.last_result = np.zeros((6,1))
 
     def predict(self):
-        """Predict state vector u and variance of uncertainty P (covariance).
-            where,
-            u: previous state vector
-            P: previous covariance matrix
-            F: state transition matrix
-            Q: process noise matrix
-        Equations:
-            u'_{k|k-1} = Fu'_{k-1|k-1}
-            P_{k|k-1} = FP_{k-1|k-1} F.T + Q
-            where,
-                F.T is F transpose
-        Args:
-            None
-        Return:
-            vector of predicted state estimate
-        """
         # Project the state ahead
         self.x = self.A*self.x 
         # Project the error covariance ahead
@@ -88,28 +59,6 @@ class KalmanFilter(object):
         return self.x
 
     def correct(self, m, flag):
-        """Correct or update state vector u and variance of uncertainty P (covariance).
-        where,
-        u: predicted state vector u
-        A: matrix in observation equations
-        b: vector of observations
-        P: predicted covariance matrix
-        Q: process noise matrix
-        R: observation noise matrix
-        Equations:
-            C = AP_{k|k-1} A.T + R
-            K_{k} = P_{k|k-1} A.T(C.Inv)
-            u'_{k|k} = u'_{k|k-1} + K_{k}(b_{k} - Au'_{k|k-1})
-            P_{k|k} = P_{k|k-1} - K_{k}(CK.T)
-            where,
-                A.T is A transpose
-                C.Inv is C inverse
-        Args:
-            b: vector of observations
-            flag: if "true" prediction result will be updated else detection
-        Return:
-            predicted state vector u
-        """
         if not flag:  # update using prediction
             self.m = self.last_result[:3]
         else:  # update using detection

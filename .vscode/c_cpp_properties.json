@@ -1,18 +1,23 @@
 {
-  "configurations": [
-    {
-      "browse": {
-        "databaseFilename": "",
-        "limitSymbolsToIncludedHeaders": true
-      },
-      "includePath": [
-        "/home/diggerdata/catkin_ws/devel/include",
-        "/opt/ros/melodic/include",
-        "/home/diggerdata/catkin_ws/src/realsense-2.1.0/realsense2_camera/include",
-        "/home/diggerdata/catkin_ws/src/vision_msgs/include",
-        "/usr/include"
-      ],
-      "name": "Linux"
-    }
-  ]
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "/home/diggerdata/catkin_ws/devel/include",
+                "/opt/ros/melodic/include",
+                "/home/diggerdata/catkin_ws/src/realsense-2.1.0/realsense2_camera/include",
+                "/home/diggerdata/catkin_ws/src/vision_msgs/include",
+                "/usr/include"
+            ],
+            "name": "Linux",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "C:\\Program Files\\LLVM\\bin\\clang.exe",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
 }
